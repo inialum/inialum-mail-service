@@ -175,3 +175,11 @@ dist
 .svelte-kit
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,node
+
+# Hono
+dist
+.wrangler
+.dev.vars
+
+# Change them to your taste:
+wrangler.toml

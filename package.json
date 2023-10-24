@@ -1,0 +1,33 @@
+{
+  "name": "inialum-mail-service",
+  "type": "module",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev": "wrangler dev src/index.ts",
+    "deploy": "wrangler deploy --minify src/index.ts",
+    "lint": "eslint --cache src/**/*.ts --ignore-path .gitignore .",
+    "format": "prettier --cache --write src/**/*.ts",
+    "test": "jest"
+  },
+  "dependencies": {
+    "hono": "^3.8.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20230914.0",
+    "@types/jest": "^29.5.6",
+    "@types/jws": "^3.2.7",
+    "@typescript-eslint/eslint-plugin": "^6.8.0",
+    "@typescript-eslint/parser": "^6.8.0",
+    "dotenv": "^16.3.1",
+    "esbuild": "^0.19.5",
+    "esbuild-jest": "^0.5.0",
+    "eslint": "^8.52.0",
+    "eslint-config-prettier": "^9.0.0",
+    "jest": "^29.7.0",
+    "jest-environment-miniflare": "^2.14.1",
+    "jws": "^4.0.0",
+    "prettier": "^3.0.3",
+    "wrangler": "^3.14.0"
+  }
+}
