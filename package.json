@@ -7,8 +7,8 @@
     "dev": "wrangler dev src/index.ts",
     "deploy": "wrangler deploy --minify src/index.ts",
     "create-token": "node --loader esbuild-register/loader -r esbuild-register ./src/utils/createToken.ts",
-    "lint": "eslint --cache src/**/*.ts --ignore-path .gitignore .",
-    "format": "prettier --cache --write src/**/*.ts",
+    "lint": "eslint --cache \"**/*.{js,jsx,ts,tsx,json}\" --ignore-path .gitignore .",
+    "format": "prettier --cache --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "test": "vitest"
   },
   "dependencies": {
@@ -33,6 +33,7 @@
     "eslint-plugin-unused-imports": "^3.0.0",
     "jws": "^4.0.0",
     "prettier": "^3.0.3",
+    "typescript": "^5.2.2",
     "vite": "^4.5.0",
     "vitest": "^0.34.6",
     "vitest-environment-miniflare": "^2.14.1",
