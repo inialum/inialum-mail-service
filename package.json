@@ -9,7 +9,9 @@
     "create-token": "node --loader esbuild-register/loader -r esbuild-register ./src/utils/createToken.ts",
     "lint": "eslint --cache \"**/*.{js,jsx,ts,tsx,json}\" --ignore-path .gitignore .",
     "format": "prettier --cache --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
-    "test": "vitest"
+    "test": "vitest",
+    "test:ci": "pnpm run test:coverage",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.449.0",
@@ -24,6 +26,7 @@
     "@types/libmime": "^5.0.3",
     "@typescript-eslint/eslint-plugin": "^6.10.0",
     "@typescript-eslint/parser": "^6.10.0",
+    "@vitest/coverage-v8": "^0.34.6",
     "dotenv": "^16.3.1",
     "esbuild": "^0.19.5",
     "esbuild-register": "^3.5.0",
