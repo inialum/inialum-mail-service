@@ -47,7 +47,7 @@ describe('sendEmailWithSES', () => {
   test('Should throw SESApiError', async () => {
     SESv2Mock.on(SendEmailCommand).resolves({
       $metadata: {
-        httpStatusCode: 400,
+        httpStatusCode: 500,
       },
     })
 
