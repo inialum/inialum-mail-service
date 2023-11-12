@@ -1,16 +1,29 @@
 import { type ZodError } from 'zod'
 
+import { sendEmailWithSES } from '@/lib/mail/ses'
+
 import { apiV1 } from './v1'
 
-vi.mock('@/lib/ses', () => {
+vi.mock('@/lib/mail/ses', () => {
   return {
     sendEmailWithSES: vi.fn(),
   }
 })
 
-describe('API V1', () => {
-  // FIXME: Enable this test after the issue around loading environment variables with Vitest is resolved.
-  test.todo('POST /send (should return data with no errors)', async () => {
+vi.mock('hono/adapter', () => {
+  return {
+    env: () => getMiniflareBindings(),
+  }
+})
+
+describe('API v1', () => {
+  test('POST /send (should return data with no errors)', async () => {
+    vi.mocked(sendEmailWithSES).mockResolvedValueOnce({
+      $metadata: {
+        httpStatusCode: 200,
+      },
+    })
+
     const res = await apiV1.request('/send', {
       method: 'POST',
       headers: {
