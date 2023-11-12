@@ -1,25 +1,15 @@
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { env } from 'hono/adapter'
-import { z } from 'zod'
 
+import { SendApiSchemaV1 } from '@/lib/api/validations'
 import { sendEmailWithSES } from '@/lib/mail/ses'
 
 export const apiV1 = new Hono()
 
-const schema = z.object({
-  to: z.string().email('Invalid email address'),
-  subject: z.string({
-    required_error: 'This field is required',
-  }),
-  body: z.string({
-    required_error: 'This field is required',
-  }),
-})
-
 apiV1.post(
   '/send',
-  zValidator('json', schema, (result, c) => {
+  zValidator('json', SendApiSchemaV1, (result, c) => {
     if (!result.success) {
       return c.json(
         {
