@@ -1,5 +1,5 @@
 {
-  "cSpell.words": ["INIAD", "INIALUM", "Hono"],
+  "cSpell.words": ["Hono", "INIAD", "INIALUM", "sesv"],
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
