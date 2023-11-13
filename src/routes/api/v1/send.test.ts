@@ -2,7 +2,7 @@ import { type ZodError } from 'zod'
 
 import { sendEmailWithSES } from '@/lib/mail/ses'
 
-import { apiV1 } from './v1'
+import { apiV1 } from '.'
 
 vi.mock('@/lib/mail/ses', () => {
   return {
