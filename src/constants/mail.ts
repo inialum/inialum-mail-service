@@ -1,0 +1,1 @@
+export const DEFAULT_MAIL_FROM_NAME = 'INIAD同窓会 「INIALUM」'

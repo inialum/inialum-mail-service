@@ -13,6 +13,77 @@
     "ecmaVersion": "latest",
     "sourceType": "module"
   },
-  "plugins": ["@typescript-eslint"],
-  "rules": {}
+  "plugins": ["@typescript-eslint", "import", "unused-imports"],
+  "rules": {
+    "@typescript-eslint/consistent-type-imports": [
+      "error",
+      {
+        "prefer": "type-imports",
+        "fixStyle": "inline-type-imports"
+      }
+    ],
+    "import/newline-after-import": "error",
+    "import/order": [
+      "warn",
+      {
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          ["sibling", "parent"],
+          "object",
+          "type",
+          "index"
+        ],
+        "newlines-between": "always",
+        "pathGroupsExcludedImportTypes": ["builtin"],
+        "alphabetize": { "order": "asc", "caseInsensitive": true },
+        "pathGroups": [
+          {
+            "pattern": "@/constants/**",
+            "group": "internal",
+            "position": "before"
+          },
+          {
+            "pattern": "@/lib/**",
+            "group": "internal",
+            "position": "before"
+          },
+          {
+            "pattern": "@/routes/**",
+            "group": "internal",
+            "position": "before"
+          },
+          {
+            "pattern": "@/types/**",
+            "group": "internal",
+            "position": "before"
+          },
+          {
+            "pattern": "@/utils/**",
+            "group": "internal",
+            "position": "before"
+          }
+        ]
+      }
+    ],
+    "no-debugger": "warn",
+    "no-console": [
+      "warn",
+      {
+        "allow": ["info", "warn", "error"]
+      }
+    ],
+    "no-unused-vars": "off",
+    "unused-imports/no-unused-imports": "error",
+    "unused-imports/no-unused-vars": [
+      "warn",
+      {
+        "vars": "all",
+        "varsIgnorePattern": "^_",
+        "args": "after-used",
+        "argsIgnorePattern": "^_"
+      }
+    ]
+  }
 }
