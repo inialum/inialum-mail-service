@@ -1,5 +1,6 @@
 import { type ZodError } from 'zod'
 
+import { type SendApiRequestV1 } from '@/lib/api/v1/schema/send'
 import { sendEmailWithSES } from '@/lib/mail/ses'
 
 import { apiV1 } from '.'
@@ -17,6 +18,15 @@ vi.mock('hono/adapter', () => {
 })
 
 describe('API v1', () => {
+  const apiBodyContent: SendApiRequestV1 = {
+    to: 'test@expmle.com',
+    subject: 'Test',
+    body: {
+      text: 'This is a test mail.',
+      html: '<p>Hello World!</p>',
+    },
+  }
+
   test('POST /send (should return data with no errors)', async () => {
     vi.mocked(sendEmailWithSES).mockResolvedValueOnce({
       $metadata: {
@@ -29,11 +39,7 @@ describe('API v1', () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        to: 'test@expmle.com',
-        subject: 'Test',
-        body: 'This is a test mail.',
-      }),
+      body: JSON.stringify(apiBodyContent),
     })
 
     expect(res.status).toBe(200)
@@ -50,7 +56,7 @@ describe('API v1', () => {
       },
       body: JSON.stringify({
         to: '.test@expmle.com',
-        body: 'This is a test mail.',
+        body: { ...apiBodyContent.body, text: undefined },
       }),
     })
 
@@ -69,6 +75,13 @@ describe('API v1', () => {
           expected: 'string',
           message: 'This field is required',
           path: ['subject'],
+          received: 'undefined',
+        },
+        {
+          code: 'invalid_type',
+          expected: 'string',
+          message: 'This field is required',
+          path: ['body', 'text'],
           received: 'undefined',
         },
       ] as ZodError['issues'],
