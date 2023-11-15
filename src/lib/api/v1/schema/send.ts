@@ -1,5 +1,21 @@
 import { z } from '@hono/zod-openapi'
 
+/*
+ * Schema for mail body content
+ */
+const MailBodyContentSchema = z.object({
+  text: z
+    .string({
+      required_error: 'This field is required',
+    })
+    .openapi({
+      example: 'Body content in plain text',
+    }),
+  html: z.string().optional().openapi({
+    example: 'Body content in HTML',
+  }),
+})
+
 /**
  * Schema for request of POST /send
  */
@@ -14,14 +30,10 @@ export const SendApiRequestSchemaV1 = z.object({
     .openapi({
       example: 'This is a subject',
     }),
-  body: z
-    .string({
-      required_error: 'This field is required',
-    })
-    .openapi({
-      example: 'This is a body',
-    }),
+  body: MailBodyContentSchema,
 })
+
+export type SendApiRequestV1 = z.infer<typeof SendApiRequestSchemaV1>
 
 /**
  * Schema for response of POST /send
@@ -33,7 +45,7 @@ export const SendApiResponseSchemaV1 = z.object({
 })
 
 /**
- * Schema for Zod validation error (internal use)
+ * Schema for Zod validation error
  */
 const ZodValidationError = z.object({
   code: z.string(),

@@ -24,8 +24,12 @@ export const sendEmailWithSES = async (
     Content: {
       Simple: {
         Body: {
+          Text: {
+            Data: body.text,
+            Charset: 'UTF-8',
+          },
           Html: {
-            Data: body,
+            Data: body.html,
             Charset: 'UTF-8',
           },
         },

@@ -21,7 +21,10 @@ describe('sendEmailWithSES', () => {
     fromAddress: 'test@example.com',
     toAddress: 'to@example.com',
     subject: 'Test',
-    body: 'Hello world',
+    body: {
+      text: 'Hello world',
+      html: '<p>Hello World!</p>',
+    },
   }
 
   const credentials: SESv2ClientConfig['credentials'] = {
