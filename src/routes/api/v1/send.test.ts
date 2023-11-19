@@ -1,7 +1,7 @@
 import { type ZodError } from 'zod'
 
-import { type SendApiRequestV1 } from '@/lib/api/v1/schema/send'
-import { sendEmailWithSES } from '@/lib/mail/ses'
+import { type SendApiRequestV1 } from '@/libs/api/v1/schema/send'
+import { sendEmailWithSES } from '@/libs/mail/ses'
 
 import { apiV1 } from '.'
 
