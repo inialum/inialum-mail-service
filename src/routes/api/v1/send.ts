@@ -6,8 +6,8 @@ import {
   SendApi500ErrorSchemaV1,
   SendApiRequestSchemaV1,
   SendApiResponseSchemaV1,
-} from '@/lib/api/v1/schema/send'
-import { sendEmailWithSES } from '@/lib/mail/ses'
+} from '@/libs/api/v1/schema/send'
+import { sendEmailWithSES } from '@/libs/mail/ses'
 
 const sendApiV1 = new OpenAPIHono()
 

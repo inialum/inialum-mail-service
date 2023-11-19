@@ -9,7 +9,7 @@ import { encodeWord } from 'libmime'
 import { DEFAULT_AWS_REGION } from '@/constants/aws'
 import { DEFAULT_MAIL_FROM_NAME } from '@/constants/mail'
 
-import { SESApiError } from '@/lib/errors'
+import { SESApiError } from '@/libs/errors'
 
 import { type Mail } from '@/types/Mail'
 
