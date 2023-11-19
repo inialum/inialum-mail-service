@@ -5,7 +5,7 @@ import { sendEmailWithSES } from '@/libs/mail/ses'
 
 import { apiV1 } from '.'
 
-vi.mock('@/lib/mail/ses', () => {
+vi.mock('@/libs/mail/ses', () => {
   return {
     sendEmailWithSES: vi.fn(),
   }
