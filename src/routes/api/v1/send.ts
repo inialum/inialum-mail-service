@@ -22,6 +22,7 @@ const route = createRoute({
         },
       },
       description: 'Email data to send',
+      required: true,
     },
   },
   responses: {
