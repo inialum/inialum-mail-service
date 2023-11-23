@@ -14,7 +14,7 @@ const MailBodyContentSchema = z.object({
   html: z.string().optional().openapi({
     example: 'Body content in HTML',
   }),
-})
+}).openapi('MailBodyContent')
 
 /**
  * Schema for request of POST /send
@@ -31,7 +31,7 @@ export const SendApiRequestSchemaV1 = z.object({
       example: 'This is a subject',
     }),
   body: MailBodyContentSchema,
-})
+}).openapi('Request')
 
 export type SendApiRequestV1 = z.infer<typeof SendApiRequestSchemaV1>
 
@@ -42,7 +42,7 @@ export const SendApiResponseSchemaV1 = z.object({
   status: z.string().openapi({
     example: 'ok',
   }),
-})
+}).openapi('Response')
 
 /**
  * Schema for Zod validation error
