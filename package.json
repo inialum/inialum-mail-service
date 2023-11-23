@@ -4,7 +4,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "dev": "wrangler dev src/index.ts",
+    "dev": "wrangler dev src/index.ts --port 8080",
     "deploy": "wrangler deploy --minify src/index.ts",
     "create-token": "node --loader esbuild-register/loader -r esbuild-register ./src/utils/createToken.ts",
     "lint": "eslint --cache \"**/*.{js,jsx,ts,tsx}\" --ignore-path .gitignore .",

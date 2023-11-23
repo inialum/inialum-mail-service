@@ -15,12 +15,17 @@ app.use('/api/*', async (c, next) => {
 })
 
 app.route('/api', api)
-app.doc('/docs/v1', {
+app.doc('/schema/v1', {
   openapi: '3.0.0',
   info: {
     version: '1.0.0',
     title: 'INIALUM Mail Service API v1',
   },
+  servers: [
+    {
+      url: 'https://mail-api.inialum.com',
+    },
+  ],
 })
 
 export default app
