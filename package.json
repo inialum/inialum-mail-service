@@ -38,7 +38,6 @@
     "jws": "^4.0.0",
     "prettier": "^3.0.3",
     "typescript": "^5.2.2",
-    "vite": "^4.5.0",
     "vitest": "^0.34.6",
     "vitest-environment-miniflare": "^2.14.1",
     "wrangler": "^3.15.0"

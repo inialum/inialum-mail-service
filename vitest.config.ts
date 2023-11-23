@@ -10,6 +10,10 @@ export default defineConfig({
   resolve: {
     alias: [
       {
+        find: '@Root',
+        replacement: resolve(__dirname, '.'),
+      },
+      {
         find: '@',
         replacement: resolve(__dirname, './src'),
       },
