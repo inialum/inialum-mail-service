@@ -7,6 +7,7 @@ import {
   SendApiRequestSchemaV1,
   SendApiResponseSchemaV1,
 } from '@/libs/api/v1/schema/send'
+import { SESApiError } from '@/libs/errors'
 import { sendEmailWithSES } from '@/libs/mail/ses'
 
 const sendApiV1 = new OpenAPIHono()
@@ -80,7 +81,7 @@ sendApiV1.openapi(
         //TODO: Use OpenTelemetry for logging
         console.error(e)
 
-        if (e.name === 'SESApiError') {
+        if (e instanceof SESApiError) {
           console.error(e.message)
         }
         return c.json(
