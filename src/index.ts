@@ -27,9 +27,15 @@ app.doc('/schema/v1', {
   },
   servers: [
     {
-      url: 'https://mail-api.inialum.com',
+      url: 'https://mail-api.inialum.org',
     },
   ],
+})
+app.openAPIRegistry.registerComponent('securitySchemes', 'bearerAuth', {
+  type: 'http',
+  scheme: 'bearer',
+  bearerFormat: 'JWT',
+  description: 'JWT Authentication',
 })
 
 export default app
