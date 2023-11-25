@@ -36,7 +36,7 @@ jobs:
         run: pnpm test:ci
 
       - name: Upload artifact for deployment job
-        if: github.ref == 'refs/heads/$default-branch'
+        if: github.ref_name == github.event.repository.default_branch
         uses: actions/upload-artifact@v3
         with:
           name: node-app
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: test
-    if: github.ref == 'refs/heads/$default-branch'
+    if: github.ref_name == github.event.repository.default_branch
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v3
