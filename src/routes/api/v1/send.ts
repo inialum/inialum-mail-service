@@ -15,6 +15,7 @@ const sendApiV1 = new OpenAPIHono()
 const route = createRoute({
   method: 'post',
   path: '',
+  security: [{ Bearer: [] }],
   request: {
     body: {
       content: {

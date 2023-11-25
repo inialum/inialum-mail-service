@@ -3,46 +3,52 @@ import { z } from '@hono/zod-openapi'
 /*
  * Schema for mail body content
  */
-const MailBodyContentSchema = z.object({
-  text: z
-    .string({
-      required_error: 'This field is required',
-    })
-    .openapi({
-      example: 'Body content in plain text',
+const MailBodyContentSchema = z
+  .object({
+    text: z
+      .string({
+        required_error: 'This field is required',
+      })
+      .openapi({
+        example: 'Body content in plain text',
+      }),
+    html: z.string().optional().openapi({
+      example: 'Body content in HTML',
     }),
-  html: z.string().optional().openapi({
-    example: 'Body content in HTML',
-  }),
-}).openapi('MailBodyContent')
+  })
+  .openapi('MailBodyContent')
 
 /**
  * Schema for request of POST /send
  */
-export const SendApiRequestSchemaV1 = z.object({
-  to: z.string().email('Invalid email address').openapi({
-    example: 'to@example.com',
-  }),
-  subject: z
-    .string({
-      required_error: 'This field is required',
-    })
-    .openapi({
-      example: 'This is a subject',
+export const SendApiRequestSchemaV1 = z
+  .object({
+    to: z.string().email('Invalid email address').openapi({
+      example: 'to@example.com',
     }),
-  body: MailBodyContentSchema,
-}).openapi('Request')
+    subject: z
+      .string({
+        required_error: 'This field is required',
+      })
+      .openapi({
+        example: 'This is a subject',
+      }),
+    body: MailBodyContentSchema,
+  })
+  .openapi('Request')
 
 export type SendApiRequestV1 = z.infer<typeof SendApiRequestSchemaV1>
 
 /**
  * Schema for response of POST /send
  */
-export const SendApiResponseSchemaV1 = z.object({
-  status: z.string().openapi({
-    example: 'ok',
-  }),
-}).openapi('Response')
+export const SendApiResponseSchemaV1 = z
+  .object({
+    status: z.string().openapi({
+      example: 'ok',
+    }),
+  })
+  .openapi('Response')
 
 /**
  * Schema for Zod validation error
