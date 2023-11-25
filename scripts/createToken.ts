@@ -1,5 +1,5 @@
 import { sign } from 'jws'
-import '@Root/env.ts'
+import '@Root/env'
 
 const payload = {
   service_name: 'inialum-mail-service',
