@@ -15,7 +15,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 3
-    permissions: {}
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
