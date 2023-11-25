@@ -1,11 +1,15 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { env } from 'hono/adapter'
+import { cors } from 'hono/cors'
 import { jwt } from 'hono/jwt'
+
+import { ORIGINS } from '@/constants/config'
 
 import { api } from '@/routes/api'
 
 const app = new OpenAPIHono()
 
+app.use('/api/*', cors({ origin: ORIGINS }))
 app.use('/api/*', async (c, next) => {
   const { TOKEN_SECRET } = env<{ TOKEN_SECRET: string }>(c)
   const auth = jwt({
