@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { sign } from 'jws'
 import '@Root/env'
 
@@ -15,11 +14,11 @@ try {
     payload,
     secret,
   })
-  console.log(`token: ${token}`)
+  console.info(`token: ${token}`)
 } catch (e) {
   if (e instanceof Error) {
-    console.log('Failed to create token:', e.message)
+    console.error('Failed to create token:', e.message)
   } else {
-    console.log(e)
+    console.error(e)
   }
 }
