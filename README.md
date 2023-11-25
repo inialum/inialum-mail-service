@@ -4,12 +4,12 @@ Microservice for delivering email to users.
 
 ## Development
 
+> [!NOTE]
+>
+> - inialum-mail-service uses [Amazon Simple Email Service (Amazon SES)](http://aws.amazon.com/ses) API v2 to deliver email to users. You need to create an AWS account and configure Amazon SES before developing this service.
+> - This project uses Hono. You can read the documentation [here](https://hono.dev).
+
 ### Setup
-
-#### Prerequisites
-
-- inialum-mail-service uses [Amazon Simple Email Service (Amazon SES)](http://aws.amazon.com/ses) API v2 to deliver email to users. You need to create an AWS account and configure Amazon SES before developing this service.
-- This project uses Hono. You can read the documentation [here](https://hono.dev).
 
 1. Clone this repository
 2. Install dependencies
