@@ -31,6 +31,7 @@ app.doc('/schema/v1', {
     },
   ],
 })
+
 app.openAPIRegistry.registerComponent('securitySchemes', 'bearerAuth', {
   type: 'http',
   scheme: 'bearer',
