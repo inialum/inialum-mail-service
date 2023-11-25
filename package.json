@@ -3,10 +3,6 @@
   "type": "module",
   "private": true,
   "license": "UNLICENSED",
-  "files": [
-    "src",
-    "scripts"
-  ],
   "scripts": {
     "dev": "wrangler dev src/index.ts --port 8080",
     "deploy": "wrangler deploy --minify src/index.ts",
