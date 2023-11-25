@@ -2,7 +2,7 @@
   "name": "inialum-mail-service",
   "type": "module",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "scripts": {
     "dev": "wrangler dev src/index.ts --port 8080",
     "deploy": "wrangler deploy --minify src/index.ts",
