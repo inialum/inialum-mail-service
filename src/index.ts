@@ -2,6 +2,7 @@ import { OpenAPIHono } from '@hono/zod-openapi'
 import { env } from 'hono/adapter'
 import { cors } from 'hono/cors'
 import { jwt } from 'hono/jwt'
+import { secureHeaders } from 'hono/secure-headers'
 
 import { ORIGINS } from '@/constants/config'
 
@@ -9,7 +10,14 @@ import { api } from '@/routes/api'
 
 const app = new OpenAPIHono()
 
-app.use('/api/*', cors({ origin: ORIGINS }))
+app.use('*', secureHeaders())
+app.use('/api/*', async (c, next) => {
+  const { ENVIRONMENT } = env<{ ENVIRONMENT: string }>(c)
+  const originCheck = cors({
+    origin: ENVIRONMENT === 'production' ? ORIGINS : '*',
+  })
+  return await originCheck(c, next)
+})
 app.use('/api/*', async (c, next) => {
   const { TOKEN_SECRET } = env<{ TOKEN_SECRET: string }>(c)
   const auth = jwt({
