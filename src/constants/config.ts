@@ -1,1 +1,1 @@
-export const ORIGINS = ['http://localhost:3001']
+export const ORIGINS = ['https://inialum.org']
