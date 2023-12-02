@@ -16,6 +16,7 @@ import { type Mail } from '@/types/Mail'
 export const sendEmailWithSES = async (
   { fromAddress, toAddress, subject, body }: Mail,
   credentials: SESv2ClientConfig['credentials'],
+  endpoint?: string,
   region: string = DEFAULT_AWS_REGION,
 ) => {
   const from = `${encodeWord(DEFAULT_MAIL_FROM_NAME)} <${fromAddress}>`
@@ -48,6 +49,7 @@ export const sendEmailWithSES = async (
 
   try {
     const client = new SESv2Client({
+      endpoint,
       region,
       credentials,
     })

@@ -60,7 +60,10 @@ sendApiV1.openapi(
   async (c) => {
     const { AWS_ACCESS_KEY_ID } = env<{ AWS_ACCESS_KEY_ID: string }>(c)
     const { AWS_SECRET_ACCESS_KEY } = env<{ AWS_SECRET_ACCESS_KEY: string }>(c)
+    const { ENVIRONMENT } = env<{ ENVIRONMENT: string }>(c)
+
     const data = c.req.valid('json')
+
     try {
       await sendEmailWithSES(
         {
@@ -73,6 +76,7 @@ sendApiV1.openapi(
           accessKeyId: AWS_ACCESS_KEY_ID,
           secretAccessKey: AWS_SECRET_ACCESS_KEY,
         },
+        ENVIRONMENT === 'production' ? undefined : 'http://localhost:8005',
       )
       return c.json({
         status: 'ok',
