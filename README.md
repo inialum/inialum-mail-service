@@ -6,7 +6,7 @@ Microservice for delivering email to users.
 
 > [!NOTE]
 >
-> - inialum-mail-service uses [Amazon Simple Email Service (Amazon SES)](https://aws.amazon.com/ses) API v2 to deliver email to users. You need to create an AWS account and configure Amazon SES before developing this service.
+> - inialum-mail-service uses [Amazon Simple Email Service (Amazon SES)](https://aws.amazon.com/ses) API v2 to deliver email to users. You need to create an AWS account and configure Amazon SES before using this service in production.
 > - This project uses Hono. You can read the documentation [here](https://hono.dev).
 
 ### Setup
@@ -32,7 +32,8 @@ Microservice for delivering email to users.
    pnpm run dev
    ```
 
-   The service will be running on port 8080.
+   The service will be running on port 8080.  
+   You can check sended mails at http://localhost:8005. (powered by aws-ses-v2-local)
 
 ### Testing
 
