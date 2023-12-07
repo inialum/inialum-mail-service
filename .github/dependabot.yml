@@ -5,3 +5,13 @@ updates:
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 5
+    groups:
+      linter-and-formatter:
+        patterns:
+          - "@typescript-eslint/*"
+          - "eslint*"
+          - "prettier"
+      test:
+        patterns:
+          - "@vitest/*"
+          - "vitest*"
