@@ -20,7 +20,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@aws-sdk/client-sesv2": "^3.449.0",
+    "@aws-sdk/client-sesv2": "^3.468.0",
     "@hono/zod-openapi": "^0.8.3",
     "hono": "^3.9.2",
     "libmime": "^5.2.1",
