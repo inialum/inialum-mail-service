@@ -26,8 +26,8 @@ devDependencies:
     specifier: ^4.20231025.0
     version: 4.20231025.0
   '@types/jws':
-    specifier: ^3.2.8
-    version: 3.2.8
+    specifier: ^3.2.9
+    version: 3.2.9
   '@types/libmime':
     specifier: ^5.0.3
     version: 5.0.3
@@ -2122,8 +2122,8 @@ packages:
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
     dev: true
 
-  /@types/jws@3.2.8:
-    resolution: {integrity: sha512-xDIvCuI7hEicqUa+dSc2TnrC92yvJtzbLghMrMcwroWzU9RWlF64cqrWW8QGikq4f7fN0V7edDIWuMLeICk+2A==}
+  /@types/jws@3.2.9:
+    resolution: {integrity: sha512-xAqC7PI7QSBY3fXV1f2pbcdbBFoR4dF8+lH2z6MfZQVcGe14twYVfjzJ3CHhLS1NHxE+DnjUR5xaHu2/U9GGaQ==}
     dependencies:
       '@types/node': 18.18.9
     dev: true
