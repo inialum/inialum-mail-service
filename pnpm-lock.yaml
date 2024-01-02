@@ -9,8 +9,8 @@ dependencies:
     specifier: ^3.468.0
     version: 3.468.0
   '@hono/zod-openapi':
-    specifier: ^0.8.3
-    version: 0.8.3(hono@3.9.2)(zod@3.22.4)
+    specifier: ^0.9.0
+    version: 0.9.0(hono@3.9.2)(zod@3.22.4)
   hono:
     specifier: ^3.9.2
     version: 3.9.2
@@ -1302,8 +1302,8 @@ packages:
     engines: {node: '>=14'}
     dev: true
 
-  /@hono/zod-openapi@0.8.3(hono@3.9.2)(zod@3.22.4):
-    resolution: {integrity: sha512-TwjSf63miIF3VBqNy4V6EOqZYdTQPeIQQ9Q2HjRWFYH9f2QtBFXziuqIg2Y76gNZ3WDal67NQXmbSErHiFR44g==}
+  /@hono/zod-openapi@0.9.0(hono@3.9.2)(zod@3.22.4):
+    resolution: {integrity: sha512-WEJ5iq3Qy1ciParYdtf2zjgujRVe5uLBIfAru0Vv+vl+LIakT6t6zn/8s9Tg/Q19nPvLIRcwySX7Is6B2fTvng==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
       hono: '>=3.9.0'
