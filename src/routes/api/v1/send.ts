@@ -67,7 +67,7 @@ sendApiV1.openapi(
     try {
       await sendEmailWithSES(
         {
-          fromAddress: 'noreply@notify-test.inialum.org',
+          fromAddress: data.from,
           toAddress: data.to,
           subject: data.subject,
           body: data.body,

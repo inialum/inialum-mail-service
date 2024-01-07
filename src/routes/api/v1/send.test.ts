@@ -19,6 +19,7 @@ vi.mock('hono/adapter', () => {
 
 describe('API v1', () => {
   const apiBodyContent: SendApiRequestV1 = {
+    from: 'noreply@mail.inialum.org',
     to: 'test@expmle.com',
     subject: 'Test',
     body: {
@@ -55,6 +56,7 @@ describe('API v1', () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        from: 'noreply@mail.inialum.org',
         to: '.test@expmle.com',
         body: { ...apiBodyContent.body, text: undefined },
       }),
