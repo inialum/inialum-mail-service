@@ -29,10 +29,12 @@ export const sendEmailWithSES = async (
             Data: body.text,
             Charset: 'UTF-8',
           },
-          Html: {
-            Data: body.html,
-            Charset: 'UTF-8',
-          },
+          Html: body.html
+            ? {
+                Data: body.html,
+                Charset: 'UTF-8',
+              }
+            : undefined,
         },
         Subject: {
           Data: subject,

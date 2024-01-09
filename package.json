@@ -7,7 +7,7 @@
     "dev": "npm-run-all --parallel dev:**",
     "dev:ses": "aws-ses-v2-local --port 8005",
     "dev:wrangler": "wrangler dev src/index.ts --port 8080",
-    "deploy": "wrangler deploy --minify src/index.ts",
+    "deploy": "if test \"$IS_PRODUCTION_DEPLOY\" = \"true\" ; then wrangler deploy --minify src/index.ts --keep-vars; else wrangler deploy --minify src/index.ts --keep-vars --env=staging; fi",
     "create-token": "tsx --tsconfig ./tsconfig.scripts.json ./scripts/createToken.ts",
     "lint": "pnpm run lint:check && pnpm run format:check",
     "lint:check": "eslint --cache \"**/*.{js,jsx,ts,tsx}\" --ignore-path .gitignore .",

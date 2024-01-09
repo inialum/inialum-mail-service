@@ -23,6 +23,9 @@ const MailBodyContentSchema = z
  */
 export const SendApiRequestSchemaV1 = z
   .object({
+    from: z.string().email('Invalid email address').openapi({
+      example: 'noreply@mail.inialum.org',
+    }),
     to: z.string().email('Invalid email address').openapi({
       example: 'to@example.com',
     }),
