@@ -76,7 +76,9 @@ sendApiV1.openapi(
           accessKeyId: AWS_ACCESS_KEY_ID,
           secretAccessKey: AWS_SECRET_ACCESS_KEY,
         },
-        ENVIRONMENT === 'production' ? undefined : 'http://localhost:8005',
+        ENVIRONMENT === 'production' || ENVIRONMENT === 'staging'
+          ? undefined
+          : 'http://localhost:8005',
       )
       return c.json({
         status: 'ok',
