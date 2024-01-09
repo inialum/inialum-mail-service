@@ -1,6 +1,8 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
 import { env } from 'hono/adapter'
 
+import { LOCAL_SES_API_ENDPOINT } from '@/constants/mail'
+
 import {
   SendApi400ErrorSchemaV1,
   SendApi500ErrorSchemaV1,
@@ -78,7 +80,7 @@ sendApiV1.openapi(
         },
         ENVIRONMENT === 'production' || ENVIRONMENT === 'staging'
           ? undefined
-          : 'http://localhost:8005',
+          : LOCAL_SES_API_ENDPOINT,
       )
       return c.json({
         status: 'ok',
