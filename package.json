@@ -35,7 +35,7 @@
     "@vitest/coverage-v8": "^1.2.2",
     "aws-sdk-client-mock": "^3.0.1",
     "aws-ses-v2-local": "^2.3.0",
-    "dotenv": "^16.3.1",
+    "dotenv": "^16.4.1",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.29.1",
