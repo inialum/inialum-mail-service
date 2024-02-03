@@ -6,4 +6,5 @@ vars = { ENVIRONMENT = "production" }
 
 [env.staging]
 name = "inialum-mail-service-staging"
+workers_dev = true
 vars = { ENVIRONMENT = "staging" }
