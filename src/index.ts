@@ -8,11 +8,13 @@ import { ORIGINS } from '@/constants/config'
 
 import { api } from '@/routes/api'
 
+import { type EnvironmentType } from '@/types/Environment'
+
 const app = new OpenAPIHono()
 
 app.use('*', secureHeaders())
 app.use('/api/*', async (c, next) => {
-  const { ENVIRONMENT } = env<{ ENVIRONMENT: string }>(c)
+  const { ENVIRONMENT } = env<{ ENVIRONMENT: EnvironmentType }>(c)
   const originCheck = cors({
     origin: ENVIRONMENT === 'production' ? ORIGINS : '*',
   })
@@ -27,6 +29,7 @@ app.use('/api/*', async (c, next) => {
 })
 
 app.route('/api', api)
+
 app.doc('/schema/v1', {
   openapi: '3.0.0',
   info: {

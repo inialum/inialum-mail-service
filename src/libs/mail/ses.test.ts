@@ -5,7 +5,7 @@ import {
 } from '@aws-sdk/client-sesv2'
 import { mockClient } from 'aws-sdk-client-mock'
 
-import { SESApiError } from '@/libs/errors'
+import { SESApiError } from '@/libs/error/applicationErrors'
 
 import { type Mail } from '@/types/Mail'
 
@@ -56,6 +56,10 @@ describe('sendEmailWithSES', () => {
 
     await expect(() =>
       sendEmailWithSES(mailConfig, credentials),
-    ).rejects.toThrowError(new SESApiError('Failed to send email via SES'))
+    ).rejects.toThrowError(
+      new SESApiError(
+        'Failed to send email via SES\ntoAddress: to@example.com',
+      ),
+    )
   })
 })

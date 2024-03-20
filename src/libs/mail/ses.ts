@@ -9,7 +9,7 @@ import { encodeWord } from 'libmime'
 import { DEFAULT_AWS_REGION } from '@/constants/aws'
 import { DEFAULT_MAIL_FROM_NAME } from '@/constants/mail'
 
-import { SESApiError } from '@/libs/errors'
+import { SESApiError } from '@/libs/error/applicationErrors'
 
 import { type Mail } from '@/types/Mail'
 
@@ -58,14 +58,16 @@ export const sendEmailWithSES = async (
     const command = new SendEmailCommand(params)
     const res = await client.send(command)
     if (!res.$metadata.httpStatusCode || res.$metadata.httpStatusCode !== 200) {
-      throw new SESApiError('Failed to send email via SES')
+      throw new SESApiError(
+        `Failed to send email via SES\ntoAddress: ${toAddress}`,
+      )
     }
     return res
   } catch (error) {
     throw new SESApiError(
       error instanceof Error
         ? error.message
-        : 'Unexpected error occurred while sending email via SES',
+        : `Unexpected error occurred while sending email via SES\ntoAddress: ${toAddress}`,
       {
         cause: error,
       },
