@@ -9,7 +9,7 @@ import {
   SendApiRequestSchemaV1,
   SendApiResponseSchemaV1,
 } from '@/libs/api/v1/schema/send'
-import { SESApiError } from '@/libs/errors'
+import { SESApiError } from '@/libs/error/applicationErrors'
 import { sendEmailWithSES } from '@/libs/mail/ses'
 
 const sendApiV1 = new OpenAPIHono()
