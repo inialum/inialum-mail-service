@@ -56,6 +56,10 @@ describe('sendEmailWithSES', () => {
 
     await expect(() =>
       sendEmailWithSES(mailConfig, credentials),
-    ).rejects.toThrowError(new SESApiError('Failed to send email via SES'))
+    ).rejects.toThrowError(
+      new SESApiError(
+        'Failed to send email via SES\ntoAddress: to@example.com',
+      ),
+    )
   })
 })
