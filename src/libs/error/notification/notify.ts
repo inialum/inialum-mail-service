@@ -1,5 +1,7 @@
 import { FetchApiError } from '@/libs/error/applicationErrors'
 
+import { type EnvironmentType } from '@/types/Environment'
+
 import { fetchApi } from '@/utils/fetch'
 
 const ERROR_NOTIFICATION_API_BASE_URL =
@@ -7,6 +9,8 @@ const ERROR_NOTIFICATION_API_BASE_URL =
 
 /**
  * Notify an error via inialum-error-notification-service.
+ *
+ * TODO: Make this function out of this project and make it as a package.
  */
 export const notifyError = async (
   {
@@ -16,7 +20,7 @@ export const notifyError = async (
   }: {
     title: string
     description?: string
-    environment: 'local' | 'staging' | 'production'
+    environment: EnvironmentType
   },
   token: string,
 ) => {
