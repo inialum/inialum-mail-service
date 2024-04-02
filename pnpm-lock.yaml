@@ -44,8 +44,8 @@ devDependencies:
     specifier: ^1.4.0
     version: 1.4.0(vitest@1.4.0)
   aws-sdk-client-mock:
-    specifier: ^3.0.1
-    version: 3.0.1
+    specifier: ^4.0.0
+    version: 4.0.0
   aws-ses-v2-local:
     specifier: ^2.3.1
     version: 2.3.1
@@ -2428,8 +2428,8 @@ packages:
       possible-typed-array-names: 1.0.0
     dev: true
 
-  /aws-sdk-client-mock@3.0.1:
-    resolution: {integrity: sha512-9VAzJLl8mz99KP9HjOm/93d8vznRRUTpJooPBOunRdUAnVYopCe9xmMuu7eVemu8fQ+w6rP7o5bBK1kAFkB2KQ==}
+  /aws-sdk-client-mock@4.0.0:
+    resolution: {integrity: sha512-/rxo+pzCFaUozK7TyCqo3GYwzdBGn9Ai6EsT8ytXDoUXlD/Q5hw9hj2lOkCAyubECzGJFHMmQg9GZ1GOGlN/qQ==}
     dependencies:
       '@types/sinon': 10.0.20
       sinon: 16.1.3
