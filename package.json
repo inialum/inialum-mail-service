@@ -47,7 +47,7 @@
     "prettier": "^3.2.5",
     "tsx": "^4.7.1",
     "type-fest": "^4.13.1",
-    "typescript": "^5.4.2",
+    "typescript": "^5.4.4",
     "vitest": "^1.4.0",
     "vitest-environment-miniflare": "^2.14.2",
     "wrangler": "^3.34.2"
