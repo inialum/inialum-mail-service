@@ -18,7 +18,8 @@
     "format:write": "prettier --cache --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "test": "vitest",
     "test:ci": "pnpm run test:coverage",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.533.0",
