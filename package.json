@@ -18,7 +18,8 @@
     "format:write": "prettier --cache --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "test": "vitest",
     "test:ci": "pnpm run test:coverage",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.533.0",
@@ -29,7 +30,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240314.0",
-    "@inialum/eslint-config": "^1.1.1",
+    "@inialum/eslint-config": "^1.1.2",
     "@types/jws": "^3.2.9",
     "@types/libmime": "^5.0.3",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
@@ -45,8 +46,8 @@
     "openapi-typescript": "^6.7.5",
     "prettier": "^3.2.5",
     "tsx": "^4.7.1",
-    "type-fest": "^4.13.1",
-    "typescript": "^5.4.2",
+    "type-fest": "^4.15.0",
+    "typescript": "^5.4.4",
     "vitest": "^1.4.0",
     "vitest-environment-miniflare": "^2.14.2",
     "wrangler": "^3.34.2"
