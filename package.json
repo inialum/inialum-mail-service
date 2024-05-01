@@ -26,7 +26,7 @@
     "@hono/zod-openapi": "^0.9.8",
     "hono": "^4.1.0",
     "libmime": "^5.3.4",
-    "zod": "^3.22.4"
+    "zod": "^3.23.5"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240314.0",
