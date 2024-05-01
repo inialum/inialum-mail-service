@@ -35,7 +35,7 @@
     "@types/libmime": "^5.0.3",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
-    "@vitest/coverage-v8": "^1.4.0",
+    "@vitest/coverage-v8": "^1.5.3",
     "aws-sdk-client-mock": "^3.0.1",
     "aws-ses-v2-local": "^2.3.1",
     "dotenv": "^16.4.5",
@@ -48,7 +48,7 @@
     "tsx": "^4.7.1",
     "type-fest": "^4.15.0",
     "typescript": "^5.4.4",
-    "vitest": "^1.4.0",
+    "vitest": "^1.5.3",
     "vitest-environment-miniflare": "^2.14.2",
     "wrangler": "^3.34.2"
   }
