@@ -10,7 +10,7 @@ dependencies:
     version: 3.533.0
   '@hono/zod-openapi':
     specifier: ^0.9.8
-    version: 0.9.8(hono@4.1.0)(zod@3.22.4)
+    version: 0.9.8(hono@4.1.0)(zod@3.23.8)
   hono:
     specifier: ^4.1.0
     version: 4.1.0
@@ -18,8 +18,8 @@ dependencies:
     specifier: ^5.3.4
     version: 5.3.4
   zod:
-    specifier: ^3.22.4
-    version: 3.22.4
+    specifier: ^3.23.8
+    version: 3.23.8
 
 devDependencies:
   '@cloudflare/workers-types':
@@ -104,13 +104,13 @@ packages:
       '@jridgewell/trace-mapping': 0.3.25
     dev: true
 
-  /@asteasolutions/zod-to-openapi@5.5.0(zod@3.22.4):
+  /@asteasolutions/zod-to-openapi@5.5.0(zod@3.23.8):
     resolution: {integrity: sha512-d5HwrvM6dOKr3XdeF+DmashGvfEc+1oiEfbscugsiwSTrFtuMa7ETpW9sTNnVgn+hJaz+PRxPQUYD7q9/5dUig==}
     peerDependencies:
       zod: ^3.20.2
     dependencies:
       openapi3-ts: 4.2.2
-      zod: 3.22.4
+      zod: 3.23.8
     dev: false
 
   /@aws-crypto/crc32@3.0.0:
@@ -1361,27 +1361,27 @@ packages:
     engines: {node: '>=14'}
     dev: true
 
-  /@hono/zod-openapi@0.9.8(hono@4.1.0)(zod@3.22.4):
+  /@hono/zod-openapi@0.9.8(hono@4.1.0)(zod@3.23.8):
     resolution: {integrity: sha512-NS6lvQEGnsjyQkp+aQjMARREz3WGf19y0+RiiJMVrihWlmKbGaJkPuOWpfFQG6FU9q+FVUyUCryXK+3J07GPAw==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
       hono: '>=3.11.3'
       zod: 3.*
     dependencies:
-      '@asteasolutions/zod-to-openapi': 5.5.0(zod@3.22.4)
-      '@hono/zod-validator': 0.1.11(hono@4.1.0)(zod@3.22.4)
+      '@asteasolutions/zod-to-openapi': 5.5.0(zod@3.23.8)
+      '@hono/zod-validator': 0.1.11(hono@4.1.0)(zod@3.23.8)
       hono: 4.1.0
-      zod: 3.22.4
+      zod: 3.23.8
     dev: false
 
-  /@hono/zod-validator@0.1.11(hono@4.1.0)(zod@3.22.4):
+  /@hono/zod-validator@0.1.11(hono@4.1.0)(zod@3.23.8):
     resolution: {integrity: sha512-PQXeHUP0+36qpRt8yfeD7N2jbK3ETlGvSN6dMof/HwUC/APRokQRjpXZm4rrlG71Ft0aWE01+Bm4XejqPie5Uw==}
     peerDependencies:
       hono: '>=3.9.0'
       zod: ^3.19.1
     dependencies:
       hono: 4.1.0
-      zod: 3.22.4
+      zod: 3.23.8
     dev: false
 
   /@humanwhocodes/config-array@0.11.14:
@@ -4474,7 +4474,7 @@ packages:
       workerd: 1.20240304.0
       ws: 8.16.0
       youch: 3.3.3
-      zod: 3.22.4
+      zod: 3.23.8
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -6006,5 +6006,5 @@ packages:
       stacktracey: 2.1.8
     dev: true
 
-  /zod@3.22.4:
-    resolution: {integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==}
+  /zod@3.23.8:
+    resolution: {integrity: sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==}
