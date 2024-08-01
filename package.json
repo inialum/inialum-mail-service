@@ -22,7 +22,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@aws-sdk/client-sesv2": "^3.533.0",
+    "@aws-sdk/client-sesv2": "^3.622.0",
     "@hono/zod-openapi": "^0.9.8",
     "hono": "^4.1.0",
     "libmime": "^5.3.4",
