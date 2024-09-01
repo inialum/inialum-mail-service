@@ -24,7 +24,7 @@
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.533.0",
     "@hono/zod-openapi": "^0.9.8",
-    "hono": "^4.1.0",
+    "hono": "^4.5.10",
     "libmime": "^5.3.4",
     "zod": "^3.22.4"
   },
