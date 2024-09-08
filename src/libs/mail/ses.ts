@@ -11,7 +11,7 @@ import { DEFAULT_MAIL_FROM_NAME } from '@/constants/mail'
 
 import { SESApiError } from '@/libs/error/applicationErrors'
 
-import { type Mail } from '@/types/Mail'
+import type { Mail } from '@/types/Mail'
 
 export const sendEmailWithSES = async (
   { fromAddress, toAddress, subject, body }: Mail,

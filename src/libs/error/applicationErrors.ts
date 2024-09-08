@@ -1,8 +1,8 @@
-import {
-  type HttpMethods,
-  type HttpStatusCode,
-  type ResponseData,
-  type UrlPaths,
+import type {
+  HttpMethods,
+  HttpStatusCode,
+  ResponseData,
+  UrlPaths,
 } from '@/types/apiSchemaHelper'
 
 /**
@@ -10,8 +10,10 @@ import {
  */
 export class SESApiError extends Error {
   static {
-    this.prototype.name = 'SESApiError'
+    SESApiError.prototype.name = 'SESApiError'
   }
+
+  // biome-ignore lint/complexity/noUselessConstructor: This constructor is necessary to set the name of the error
   constructor(message: string, options?: ErrorOptions) {
     super(message, options)
   }
@@ -22,7 +24,7 @@ export class SESApiError extends Error {
  */
 export class FetchApiError extends Error {
   static {
-    this.prototype.name = 'fetchApiError'
+    FetchApiError.prototype.name = 'fetchApiError'
   }
   constructor(
     message: string,

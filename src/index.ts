@@ -8,7 +8,7 @@ import { ORIGINS } from '@/constants/config'
 
 import { api } from '@/routes/api'
 
-import { type EnvironmentType } from '@/types/Environment'
+import type { EnvironmentType } from '@/types/Environment'
 
 const app = new OpenAPIHono()
 

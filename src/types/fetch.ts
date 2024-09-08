@@ -1,9 +1,9 @@
-import {
-  type HttpMethods,
-  type HttpMethodsFilteredByPath,
-  type RequestData,
-  type RequestParameters,
-  type UrlPaths,
+import type {
+  HttpMethods,
+  HttpMethodsFilteredByPath,
+  RequestData,
+  RequestParameters,
+  UrlPaths,
 } from './apiSchemaHelper'
 
 export type FetchConfig<Path extends UrlPaths, Method extends HttpMethods> = {

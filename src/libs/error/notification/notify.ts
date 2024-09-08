@@ -1,6 +1,6 @@
 import { FetchApiError } from '@/libs/error/applicationErrors'
 
-import { type EnvironmentType } from '@/types/Environment'
+import type { EnvironmentType } from '@/types/Environment'
 
 import { fetchApi } from '@/utils/fetch'
 
