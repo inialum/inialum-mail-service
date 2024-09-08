@@ -47,8 +47,8 @@ devDependencies:
     specifier: ^3.0.1
     version: 3.0.1
   aws-ses-v2-local:
-    specifier: ^2.3.1
-    version: 2.3.1
+    specifier: ^2.4.0
+    version: 2.4.0
   dotenv:
     specifier: ^16.4.5
     version: 16.4.5
@@ -1339,7 +1339,7 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dependencies:
       ajv: 6.12.6
-      debug: 4.3.4
+      debug: 4.3.5
       espree: 9.6.1
       globals: 13.24.0
       ignore: 5.3.1
@@ -1389,7 +1389,7 @@ packages:
     engines: {node: '>=10.10.0'}
     dependencies:
       '@humanwhocodes/object-schema': 2.0.2
-      debug: 4.3.4
+      debug: 4.3.5
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -2662,8 +2662,8 @@ packages:
       tslib: 2.6.2
     dev: true
 
-  /aws-ses-v2-local@2.3.1:
-    resolution: {integrity: sha512-mBBooCWqCmXojho0TsIeiTYDv/L2WdDG3yAXb7aOctY0bq67AfMK3v03sSOzvDlfrfTmFwTfWqE41YfgSxTrOw==}
+  /aws-ses-v2-local@2.4.0:
+    resolution: {integrity: sha512-RnQmXv/LtXD7mQTrlt4u6KSPoab5PW099ZmAxovOXni2+bVNTsfwYZ/ZPlxL+dM0q2EvRtBITDMbfqIp3Tf3XQ==}
     hasBin: true
     dependencies:
       ajv: 8.12.0
