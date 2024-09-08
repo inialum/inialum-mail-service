@@ -13,7 +13,7 @@ import { SESApiError } from '@/libs/error/applicationErrors'
 import { notifyError } from '@/libs/error/notification/notify'
 import { sendEmailWithSES } from '@/libs/mail/ses'
 
-import { type EnvironmentType } from '@/types/Environment'
+import type { EnvironmentType } from '@/types/Environment'
 
 const sendApiV1 = new OpenAPIHono()
 

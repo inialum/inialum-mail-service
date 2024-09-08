@@ -1,13 +1,13 @@
-import { type Fetcher, type RequestInit } from '@cloudflare/workers-types'
+import type { Fetcher, RequestInit } from '@cloudflare/workers-types'
 
 import { FetchApiError } from '@/libs/error/applicationErrors'
 
-import {
-  type ResponseData,
-  type HttpMethods,
-  type UrlPaths,
+import type {
+  HttpMethods,
+  ResponseData,
+  UrlPaths,
 } from '@/types/apiSchemaHelper'
-import { type FetchConfig } from '@/types/fetch'
+import type { FetchConfig } from '@/types/fetch'
 
 /**
  * Fetches INIALUM microservices API.
