@@ -10,7 +10,8 @@ import type {
  */
 export class SESApiError extends Error {
   static {
-    SESApiError.prototype.name = 'SESApiError'
+    // biome-ignore lint/complexity/noThisInStatic: For avoiding TypeError
+    this.prototype.name = 'SESApiError'
   }
 
   // biome-ignore lint/complexity/noUselessConstructor: This constructor is necessary to set the name of the error
@@ -24,7 +25,8 @@ export class SESApiError extends Error {
  */
 export class FetchApiError extends Error {
   static {
-    FetchApiError.prototype.name = 'fetchApiError'
+    // biome-ignore lint/complexity/noThisInStatic: For avoiding TypeError
+    this.prototype.name = 'fetchApiError'
   }
   constructor(
     message: string,
