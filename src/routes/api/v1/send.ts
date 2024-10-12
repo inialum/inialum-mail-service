@@ -76,7 +76,7 @@ sendApiV1.openapi(
       await sendEmailWithSES(
         {
           fromAddress: data.from,
-          toAddress: data.to,
+          toAddresses: [data.to],
           subject: data.subject,
           body: data.body,
         },
