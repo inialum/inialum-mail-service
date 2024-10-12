@@ -29,7 +29,7 @@
     "@cloudflare/workers-types": "^4.20241011.0",
     "@types/jws": "^3.2.9",
     "@types/libmime": "^5.0.3",
-    "@vitest/coverage-v8": "^1.6.0",
+    "@vitest/coverage-v8": "^2.1.2",
     "aws-sdk-client-mock": "^3.0.1",
     "aws-ses-v2-local": "^2.4.0",
     "dotenv": "^16.4.5",
@@ -39,8 +39,8 @@
     "tsx": "^4.7.1",
     "type-fest": "^4.15.0",
     "typescript": "^5.4.4",
-    "vitest": "^1.6.0",
-    "vitest-environment-miniflare": "^2.14.2",
+    "vitest": "^2.1.2",
+    "vitest-environment-miniflare": "^2.14.4",
     "wrangler": "^3.80.4"
   }
 }
