@@ -3,7 +3,7 @@ import { z } from '@hono/zod-openapi'
 /*
  * Schema for mail body content
  */
-const MailBodyContentSchema = z
+export const MailBodyContentSchema = z
   .object({
     text: z
       .string({

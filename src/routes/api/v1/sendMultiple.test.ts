@@ -1,13 +1,12 @@
 import type { ZodError } from 'zod'
 
-import type { SendApiRequestV1 } from '@/libs/api/v1/schema/send'
-import { sendEmailWithSES } from '@/libs/mail/ses'
-
+import type { SendMultipleApiRequestV1 } from '@/libs/api/v1/schema/sendMultiple'
+import { sendEmailWithSendGrid } from '@/libs/mail/sendgrid'
 import { apiV1 } from '.'
 
-vi.mock('@/libs/mail/ses', () => {
+vi.mock('@/libs/mail/sendgrid', () => {
   return {
-    sendEmailWithSES: vi.fn(),
+    sendEmailWithSendGrid: vi.fn(),
   }
 })
 
@@ -18,9 +17,9 @@ vi.mock('hono/adapter', () => {
 })
 
 describe('API v1', () => {
-  const apiBodyContent: SendApiRequestV1 = {
+  const apiBodyContent: SendMultipleApiRequestV1 = {
     from: 'noreply@mail.inialum.org',
-    to: 'test@expmle.com',
+    to: ['test@expmle.com', 'test2@expmle.com'],
     subject: 'Test',
     body: {
       text: 'This is a test mail.',
@@ -29,13 +28,9 @@ describe('API v1', () => {
   }
 
   test('POST /send (should return data with no errors)', async () => {
-    vi.mocked(sendEmailWithSES).mockResolvedValueOnce({
-      $metadata: {
-        httpStatusCode: 200,
-      },
-    })
+    vi.mocked(sendEmailWithSendGrid).mockResolvedValueOnce()
 
-    const res = await apiV1.request('/send', {
+    const res = await apiV1.request('/send-multiple', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -50,14 +45,14 @@ describe('API v1', () => {
   })
 
   test('POST /send (should return with error message)', async () => {
-    const res = await apiV1.request('/send', {
+    const res = await apiV1.request('/send-multiple', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         from: 'noreply@mail.inialum.org',
-        to: '.test@expmle.com',
+        to: ['.test@expmle.com'],
         body: { ...apiBodyContent.body, text: undefined },
       }),
     })
@@ -69,7 +64,7 @@ describe('API v1', () => {
         {
           code: 'invalid_string',
           message: 'Invalid email address',
-          path: ['to'],
+          path: ['to', 0],
           validation: 'email',
         },
         {

@@ -1,8 +1,11 @@
 name = "inialum-mail-service"
-compatibility_date = "2024-01-01"
+compatibility_date = "2024-09-02"
 node_compat = true
 workers_dev = false
 vars = { ENVIRONMENT = "production" }
+
+[observability]
+enabled = true
 
 [env.staging]
 name = "inialum-mail-service-staging"
