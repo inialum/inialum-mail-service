@@ -1,6 +1,6 @@
 export type Mail = {
   fromAddress: string
-  toAddress: string
+  toAddresses: string[]
   subject: string
   body: {
     text: string
