@@ -1,21 +1,21 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
 import { env } from 'hono/adapter'
 
-import { LOCAL_SES_API_ENDPOINT } from '@/constants/mail'
-
 import {
   SendApi400ErrorSchemaV1,
   SendApi500ErrorSchemaV1,
-  SendApiRequestSchemaV1,
-  SendApiResponseSchemaV1,
 } from '@/libs/api/v1/schema/send'
+import {
+  SendMultipleApiRequestSchemaV1,
+  SendMultipleApiResponseSchemaV1,
+} from '@/libs/api/v1/schema/sendMultiple'
 import { SESApiError } from '@/libs/error/applicationErrors'
 import { notifyError } from '@/libs/error/notification/notify'
-import { sendEmailWithSES } from '@/libs/mail/ses'
+import { sendEmailWithSendGrid } from '@/libs/mail/sendgrid'
 
 import type { EnvironmentType } from '@/types/Environment'
 
-const sendApiV1 = new OpenAPIHono()
+const sendMultipleApiV1 = new OpenAPIHono()
 
 const route = createRoute({
   method: 'post',
@@ -25,7 +25,7 @@ const route = createRoute({
     body: {
       content: {
         'application/json': {
-          schema: SendApiRequestSchemaV1,
+          schema: SendMultipleApiRequestSchemaV1,
         },
       },
       description: 'Email data to send',
@@ -36,7 +36,7 @@ const route = createRoute({
     200: {
       content: {
         'application/json': {
-          schema: SendApiResponseSchemaV1,
+          schema: SendMultipleApiResponseSchemaV1,
         },
       },
       description: 'Returns OK response if email is sent successfully',
@@ -60,11 +60,10 @@ const route = createRoute({
   },
 })
 
-sendApiV1.openapi(
+sendMultipleApiV1.openapi(
   route,
   async (c) => {
-    const { AWS_ACCESS_KEY_ID } = env<{ AWS_ACCESS_KEY_ID: string }>(c)
-    const { AWS_SECRET_ACCESS_KEY } = env<{ AWS_SECRET_ACCESS_KEY: string }>(c)
+    const { SENDGRID_TOKEN } = env<{ SENDGRID_TOKEN: string }>(c)
     const { ENVIRONMENT } = env<{ ENVIRONMENT: EnvironmentType }>(c)
     const { ERROR_NOTIFICATION_TOKEN } = env<{
       ERROR_NOTIFICATION_TOKEN: string
@@ -73,20 +72,14 @@ sendApiV1.openapi(
     const data = c.req.valid('json')
 
     try {
-      await sendEmailWithSES(
+      await sendEmailWithSendGrid(
         {
           fromAddress: data.from,
-          toAddresses: [data.to],
+          toAddresses: data.to,
           subject: data.subject,
           body: data.body,
         },
-        {
-          accessKeyId: AWS_ACCESS_KEY_ID,
-          secretAccessKey: AWS_SECRET_ACCESS_KEY,
-        },
-        ENVIRONMENT === 'production' || ENVIRONMENT === 'staging'
-          ? undefined
-          : LOCAL_SES_API_ENDPOINT,
+        SENDGRID_TOKEN,
       )
       return c.json({
         status: 'ok',
@@ -150,4 +143,4 @@ sendApiV1.openapi(
   },
 )
 
-export { sendApiV1 }
+export { sendMultipleApiV1 }

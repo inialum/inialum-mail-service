@@ -19,7 +19,7 @@ beforeEach(() => {
 describe('sendEmailWithSES', () => {
   const mailConfig: Mail = {
     fromAddress: 'test@example.com',
-    toAddress: 'to@example.com',
+    toAddresses: ['to@example.com'],
     subject: 'Test',
     body: {
       text: 'Hello world',
