@@ -14,12 +14,14 @@ import { SESApiError } from '@/libs/error/applicationErrors'
 import type { Mail } from '@/types/Mail'
 
 export const sendEmailWithSES = async (
-  { fromAddress, toAddress, subject, body }: Mail,
+  { fromAddress, toAddresses, subject, body }: Mail,
   credentials: SESv2ClientConfig['credentials'],
   endpoint?: string,
   region: string = DEFAULT_AWS_REGION,
 ) => {
   const from = `${encodeWord(DEFAULT_MAIL_FROM_NAME)} <${fromAddress}>`
+
+  const toAddress = toAddresses[0]
 
   const params: SendEmailCommandInput = {
     Content: {
