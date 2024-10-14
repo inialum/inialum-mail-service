@@ -8,7 +8,7 @@
     "dev:ses": "aws-ses-v2-local --port 8005",
     "dev:wrangler": "wrangler dev src/index.ts --port 8080",
     "deploy": "if test \"$IS_PRODUCTION_DEPLOY\" = \"true\" ; then wrangler deploy --minify src/index.ts --keep-vars; else wrangler deploy --minify src/index.ts --keep-vars --env=staging; fi",
-    "create-token": "tsx --tsconfig ./tsconfig.scripts.json ./scripts/createToken.ts",
+    "create-token": "inialum-token-generator --service-name inialum-mail-service --env-file ./.dev.vars",
     "api:gen-schema": "openapi-typescript https://error-notification-api.inialum.org/schema/v1 -o ./src/types/generated/schema.d.ts",
     "lint": "biome check",
     "lint:fix": "biome check --write",
@@ -28,7 +28,7 @@
   "devDependencies": {
     "@biomejs/biome": "1.8.3",
     "@cloudflare/workers-types": "^4.20241011.0",
-    "@types/jws": "^3.2.9",
+    "@inialum/token-generator": "^0.1.4",
     "@types/libmime": "^5.0.3",
     "@vitest/coverage-v8": "^2.1.2",
     "aws-sdk-client-mock": "^3.0.1",
