@@ -34,8 +34,8 @@ importers:
         specifier: ^4.20241011.0
         version: 4.20241011.0
       '@inialum/token-generator':
-        specifier: ^0.1.4
-        version: 0.1.4
+        specifier: ^0.2.0
+        version: 0.2.0
       '@types/libmime':
         specifier: ^5.0.3
         version: 5.0.3
@@ -630,8 +630,8 @@ packages:
   '@iarna/toml@2.2.5':
     resolution: {integrity: sha512-trnsAYxU3xnS1gPHPyU961coFyLkh4gAD/0zQ5mymY4yOZ+CYvsPqUbOFSw0aDM4y0tV7tiFxL/1XfXPNC6IPg==}
 
-  '@inialum/token-generator@0.1.4':
-    resolution: {integrity: sha512-eAKguRYODly3sCjazXHH20yzxlakoPQPtNd5Jkoc4gztPPaUNT09hvjTuEgh/HP2iKaaPtdo7Zp+9w/ZAayBtw==}
+  '@inialum/token-generator@0.2.0':
+    resolution: {integrity: sha512-DxLi9ZsgSA/a/MX0ClWtgGqbOX4qwgUiMBN6SG61lHTtJ5+eCTBCIB42YD93yhtVL/Q1J3o1sqFuGdekhT95nA==}
     hasBin: true
 
   '@isaacs/cliui@8.0.2':
@@ -3343,7 +3343,7 @@ snapshots:
 
   '@iarna/toml@2.2.5': {}
 
-  '@inialum/token-generator@0.1.4':
+  '@inialum/token-generator@0.2.0':
     dependencies:
       '@deno/shim-deno': 0.18.2
       '@dotenvx/dotenvx': 1.19.2
