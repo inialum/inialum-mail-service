@@ -14,6 +14,9 @@ importers:
       '@hono/zod-openapi':
         specifier: ^0.16.4
         version: 0.16.4(hono@4.6.8)(zod@3.23.8)
+      '@inialum/error-notification-service-hono-middleware':
+        specifier: ^0.2.1
+        version: 0.2.1(hono@4.6.8)
       '@sendgrid/mail':
         specifier: ^8.1.4
         version: 8.1.4
@@ -635,6 +638,16 @@ packages:
 
   '@iarna/toml@2.2.5':
     resolution: {integrity: sha512-trnsAYxU3xnS1gPHPyU961coFyLkh4gAD/0zQ5mymY4yOZ+CYvsPqUbOFSw0aDM4y0tV7tiFxL/1XfXPNC6IPg==}
+
+  '@inialum/error-notification-service-hono-middleware@0.2.1':
+    resolution: {integrity: sha512-vOrvYOQD4Qhg2kPd5gtLbxiA1iUDb1gWUJZS1QScEPdFfY0eWO4Qvkl9hdrwUswNFd0T3mmQSzhJ54XJLQzoNg==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      hono: '>=4.2.0'
+
+  '@inialum/error-notification-service-javascript-sdk@0.2.1':
+    resolution: {integrity: sha512-TSR2y4/Nf5PskGl2MMX2yxofiiFanLbA7ivLusclcx7iV2Xdh5AOxSU7rcXP60k0l5vIHf+c5858H49cLlbUHw==}
+    engines: {node: '>=20.0.0'}
 
   '@inialum/token-generator@0.2.0':
     resolution: {integrity: sha512-DxLi9ZsgSA/a/MX0ClWtgGqbOX4qwgUiMBN6SG61lHTtJ5+eCTBCIB42YD93yhtVL/Q1J3o1sqFuGdekhT95nA==}
@@ -2106,6 +2119,12 @@ packages:
     resolution: {integrity: sha512-1FlR+gjXK7X+AsAHso35MnyN5KqGwJRi/31ft6x0M194ht7S+rWAvd7PHss9xSKMzE0asv1pyIHaJYq+BbacAQ==}
     engines: {node: '>=12'}
 
+  openapi-fetch@0.13.0:
+    resolution: {integrity: sha512-6Nlf/BDbtyHwHdNrLPUiyt4CZMzL3ZyAt55yWH8W7+Z+8aYWnvca4uZHQHXViy8KcnCMqAhLM/bifh2Yjjkf6w==}
+
+  openapi-typescript-helpers@0.0.15:
+    resolution: {integrity: sha512-opyTPaunsklCBpTK8JGef6mfPhLSnyy5a0IN9vKtx3+4aExf+KxEqYwIy3hqkedXIB97u357uLMJsOnm3GVjsw==}
+
   openapi-typescript@7.4.2:
     resolution: {integrity: sha512-SvhmSTItcEAdDUcz+wzrcg6OENpMRkHqqY2hZB01FT+NOfgLcZ1B1ML6vcQrnipONHtG9AQELiKHgGTjpNGjiQ==}
     hasBin: true
@@ -3433,6 +3452,15 @@ snapshots:
       zod: 3.23.8
 
   '@iarna/toml@2.2.5': {}
+
+  '@inialum/error-notification-service-hono-middleware@0.2.1(hono@4.6.8)':
+    dependencies:
+      '@inialum/error-notification-service-javascript-sdk': 0.2.1
+      hono: 4.6.8
+
+  '@inialum/error-notification-service-javascript-sdk@0.2.1':
+    dependencies:
+      openapi-fetch: 0.13.0
 
   '@inialum/token-generator@0.2.0':
     dependencies:
@@ -5200,6 +5228,12 @@ snapshots:
   onetime@6.0.0:
     dependencies:
       mimic-fn: 4.0.0
+
+  openapi-fetch@0.13.0:
+    dependencies:
+      openapi-typescript-helpers: 0.0.15
+
+  openapi-typescript-helpers@0.0.15: {}
 
   openapi-typescript@7.4.2(typescript@5.6.3):
     dependencies:
