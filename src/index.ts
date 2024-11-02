@@ -4,7 +4,7 @@ import { cors } from 'hono/cors'
 import { jwt } from 'hono/jwt'
 import { secureHeaders } from 'hono/secure-headers'
 
-import { ORIGINS } from '@/constants/config'
+import { API_ENDPOINT, ORIGINS } from '@/constants/config'
 
 import { api } from '@/routes/api'
 
@@ -38,7 +38,7 @@ app.doc('/schema/v1', {
 	},
 	servers: [
 		{
-			url: 'https://mail-api.inialum.org',
+			url: API_ENDPOINT,
 		},
 	],
 })
