@@ -1,40 +1,28 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
-  "formatter": {
-    "enabled": true,
-    "formatWithErrors": false,
-    "indentStyle": "space",
-    "indentWidth": 2,
-    "lineEnding": "lf",
-    "lineWidth": 80,
-    "attributePosition": "auto"
-  },
-  "organizeImports": { "enabled": true },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true
-    }
-  },
-  "javascript": {
-    "formatter": {
-      "jsxQuoteStyle": "double",
-      "quoteProperties": "asNeeded",
-      "trailingCommas": "all",
-      "semicolons": "asNeeded",
-      "arrowParentheses": "always",
-      "bracketSpacing": true,
-      "bracketSameLine": false,
-      "quoteStyle": "single",
-      "attributePosition": "auto"
-    }
-  },
-  "files": {
-    "include": ["**/*.ts", "**/*.json"],
-    "ignore": ["**/types/generated/*", "**/LICENSE"]
-  },
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git"
-  }
+	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		"ignore": ["**/types/generated/*", "**/LICENSE"]
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab"
+	},
+	"organizeImports": { "enabled": true },
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "single",
+			"semicolons": "asNeeded"
+		}
+	}
 }
