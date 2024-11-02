@@ -56,22 +56,16 @@ export const SendApiResponseSchemaV1 = z
 /**
  * Schema for Zod validation error
  */
-const ZodValidationError = z.object({
-	code: z.string(),
-	expected: z.string(),
-	received: z.string(),
-	path: z.string().array(),
-	message: z.string(),
-})
+const ZodValidationError = z.any()
 
 /**
  * Schema for 400 error response of POST /send
  */
 export const SendApi400ErrorSchemaV1 = z.object({
 	message: z.string().openapi({
-		example: 'Invalid request body',
+		example: 'Validation error',
 	}),
-	issues: ZodValidationError.array().openapi({
+	issues: ZodValidationError.openapi({
 		example: [
 			{
 				code: 'invalid_type',
@@ -96,6 +90,6 @@ export const SendApi400ErrorSchemaV1 = z.object({
  */
 export const SendApi500ErrorSchemaV1 = z.object({
 	message: z.string().openapi({
-		example: 'Failed to send email via SES',
+		example: 'Internal server error',
 	}),
 })
