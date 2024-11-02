@@ -14,40 +14,40 @@ const app = new OpenAPIHono()
 
 app.use('*', secureHeaders())
 app.use('/api/*', async (c, next) => {
-  const { ENVIRONMENT } = env<{ ENVIRONMENT: EnvironmentType }>(c)
-  const originCheck = cors({
-    origin: ENVIRONMENT === 'production' ? ORIGINS : '*',
-  })
-  return await originCheck(c, next)
+	const { ENVIRONMENT } = env<{ ENVIRONMENT: EnvironmentType }>(c)
+	const originCheck = cors({
+		origin: ENVIRONMENT === 'production' ? ORIGINS : '*',
+	})
+	return await originCheck(c, next)
 })
 app.use('/api/*', async (c, next) => {
-  const { TOKEN_SECRET } = env<{ TOKEN_SECRET: string }>(c)
-  const auth = jwt({
-    secret: TOKEN_SECRET,
-  })
-  return await auth(c, next)
+	const { TOKEN_SECRET } = env<{ TOKEN_SECRET: string }>(c)
+	const auth = jwt({
+		secret: TOKEN_SECRET,
+	})
+	return await auth(c, next)
 })
 
 app.route('/api', api)
 
 app.doc('/schema/v1', {
-  openapi: '3.0.0',
-  info: {
-    version: '1.0.0',
-    title: 'INIALUM Mail Service API v1',
-  },
-  servers: [
-    {
-      url: 'https://mail-api.inialum.org',
-    },
-  ],
+	openapi: '3.0.0',
+	info: {
+		version: '1.0.0',
+		title: 'INIALUM Mail Service API v1',
+	},
+	servers: [
+		{
+			url: 'https://mail-api.inialum.org',
+		},
+	],
 })
 
 app.openAPIRegistry.registerComponent('securitySchemes', 'bearerAuth', {
-  type: 'http',
-  scheme: 'bearer',
-  bearerFormat: 'JWT',
-  description: 'JWT Authentication',
+	type: 'http',
+	scheme: 'bearer',
+	bearerFormat: 'JWT',
+	description: 'JWT Authentication',
 })
 
 export default app
