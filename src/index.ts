@@ -10,21 +10,41 @@ import { api } from '@/routes/api'
 
 import type { EnvironmentType } from '@/types/Environment'
 
+import { notifyError } from '@inialum/error-notification-service-hono-middleware'
+
 const app = new OpenAPIHono()
 
 app.use('*', secureHeaders())
+
+app.use('*', async (c, next) => {
+	const { ERROR_NOTIFICATION_TOKEN } = env<{
+		ERROR_NOTIFICATION_TOKEN: string
+	}>(c)
+	const { ENVIRONMENT } = env<{ ENVIRONMENT: EnvironmentType }>(c)
+	const handleError = notifyError({
+		token: ERROR_NOTIFICATION_TOKEN,
+		serviceName: 'inialum-mail-service',
+		environment: ENVIRONMENT,
+	})
+
+	return await handleError(c, next)
+})
+
 app.use('/api/*', async (c, next) => {
 	const { ENVIRONMENT } = env<{ ENVIRONMENT: EnvironmentType }>(c)
 	const originCheck = cors({
 		origin: ENVIRONMENT === 'production' ? ORIGINS : '*',
 	})
+
 	return await originCheck(c, next)
 })
+
 app.use('/api/*', async (c, next) => {
 	const { TOKEN_SECRET } = env<{ TOKEN_SECRET: string }>(c)
 	const auth = jwt({
 		secret: TOKEN_SECRET,
 	})
+
 	return await auth(c, next)
 })
 
