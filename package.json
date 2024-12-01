@@ -22,7 +22,7 @@
 		"@hono/zod-openapi": "^0.16.4",
 		"@inialum/error-notification-service-hono-middleware": "^0.2.1",
 		"@sendgrid/mail": "^8.1.4",
-		"hono": "^4.6.8",
+		"hono": "^4.6.12",
 		"libmime": "^5.3.5",
 		"zod": "^3.23.8"
 	},

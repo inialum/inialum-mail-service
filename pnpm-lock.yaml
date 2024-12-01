@@ -13,16 +13,16 @@ importers:
         version: 3.684.0
       '@hono/zod-openapi':
         specifier: ^0.16.4
-        version: 0.16.4(hono@4.6.8)(zod@3.23.8)
+        version: 0.16.4(hono@4.6.12)(zod@3.23.8)
       '@inialum/error-notification-service-hono-middleware':
         specifier: ^0.2.1
-        version: 0.2.1(hono@4.6.8)
+        version: 0.2.1(hono@4.6.12)
       '@sendgrid/mail':
         specifier: ^8.1.4
         version: 8.1.4
       hono:
-        specifier: ^4.6.8
-        version: 4.6.8
+        specifier: ^4.6.12
+        version: 4.6.12
       libmime:
         specifier: ^5.3.5
         version: 5.3.5
@@ -1682,8 +1682,8 @@ packages:
     resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
     hasBin: true
 
-  hono@4.6.8:
-    resolution: {integrity: sha512-f+2Ec9JAzabT61pglDiLJcF/DjiSefZkjCn9bzm1cYLGkD5ExJ3Jnv93ax9h0bn7UPLHF81KktoyjdQfWI2n1Q==}
+  hono@4.6.12:
+    resolution: {integrity: sha512-eHtf4kSDNw6VVrdbd5IQi16r22m3s7mWPLd7xOMhg1a/Yyb1A0qpUFq8xYMX4FMuDe1nTKeMX5rTx7Nmw+a+Ag==}
     engines: {node: '>=16.9.0'}
 
   hosted-git-info@2.8.9:
@@ -3439,24 +3439,24 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@hono/zod-openapi@0.16.4(hono@4.6.8)(zod@3.23.8)':
+  '@hono/zod-openapi@0.16.4(hono@4.6.12)(zod@3.23.8)':
     dependencies:
       '@asteasolutions/zod-to-openapi': 7.2.0(zod@3.23.8)
-      '@hono/zod-validator': 0.3.0(hono@4.6.8)(zod@3.23.8)
-      hono: 4.6.8
+      '@hono/zod-validator': 0.3.0(hono@4.6.12)(zod@3.23.8)
+      hono: 4.6.12
       zod: 3.23.8
 
-  '@hono/zod-validator@0.3.0(hono@4.6.8)(zod@3.23.8)':
+  '@hono/zod-validator@0.3.0(hono@4.6.12)(zod@3.23.8)':
     dependencies:
-      hono: 4.6.8
+      hono: 4.6.12
       zod: 3.23.8
 
   '@iarna/toml@2.2.5': {}
 
-  '@inialum/error-notification-service-hono-middleware@0.2.1(hono@4.6.8)':
+  '@inialum/error-notification-service-hono-middleware@0.2.1(hono@4.6.12)':
     dependencies:
       '@inialum/error-notification-service-javascript-sdk': 0.2.1
-      hono: 4.6.8
+      hono: 4.6.12
 
   '@inialum/error-notification-service-javascript-sdk@0.2.1':
     dependencies:
@@ -4801,7 +4801,7 @@ snapshots:
 
   he@1.2.0: {}
 
-  hono@4.6.8: {}
+  hono@4.6.12: {}
 
   hosted-git-info@2.8.9: {}
 
