@@ -18,7 +18,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@aws-sdk/client-sesv2": "^3.684.0",
+		"@aws-sdk/client-sesv2": "^3.716.0",
 		"@hono/zod-openapi": "^0.16.4",
 		"@inialum/error-notification-service-hono-middleware": "^0.2.1",
 		"@sendgrid/mail": "^8.1.4",
