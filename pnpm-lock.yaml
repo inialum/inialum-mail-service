@@ -15,8 +15,8 @@ importers:
         specifier: ^0.16.4
         version: 0.16.4(hono@4.6.8)(zod@3.23.8)
       '@inialum/error-notification-service-hono-middleware':
-        specifier: ^0.2.1
-        version: 0.2.1(hono@4.6.8)
+        specifier: ^0.4.0
+        version: 0.4.0(hono@4.6.8)
       '@sendgrid/mail':
         specifier: ^8.1.4
         version: 8.1.4
@@ -639,14 +639,14 @@ packages:
   '@iarna/toml@2.2.5':
     resolution: {integrity: sha512-trnsAYxU3xnS1gPHPyU961coFyLkh4gAD/0zQ5mymY4yOZ+CYvsPqUbOFSw0aDM4y0tV7tiFxL/1XfXPNC6IPg==}
 
-  '@inialum/error-notification-service-hono-middleware@0.2.1':
-    resolution: {integrity: sha512-vOrvYOQD4Qhg2kPd5gtLbxiA1iUDb1gWUJZS1QScEPdFfY0eWO4Qvkl9hdrwUswNFd0T3mmQSzhJ54XJLQzoNg==}
+  '@inialum/error-notification-service-hono-middleware@0.4.0':
+    resolution: {integrity: sha512-3/ZiGVbv5HSSJG7xHOffTFYRctllVRIEmF493sZ31Uys2ZjHxvS/mqw+bRO9YBaXehcNS72asPjqnLC8vrnFWg==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       hono: '>=4.2.0'
 
-  '@inialum/error-notification-service-javascript-sdk@0.2.1':
-    resolution: {integrity: sha512-TSR2y4/Nf5PskGl2MMX2yxofiiFanLbA7ivLusclcx7iV2Xdh5AOxSU7rcXP60k0l5vIHf+c5858H49cLlbUHw==}
+  '@inialum/error-notification-service-javascript-sdk@0.4.0':
+    resolution: {integrity: sha512-EaR/ghS65Nfe+QuqEm1QEJQAU09gZaMizLcBO/GEq6GjSXneL6j3X45aV5mIYmZxAzx4VjSec4ycTY+3atmmRA==}
     engines: {node: '>=20.0.0'}
 
   '@inialum/token-generator@0.2.0':
@@ -3453,12 +3453,12 @@ snapshots:
 
   '@iarna/toml@2.2.5': {}
 
-  '@inialum/error-notification-service-hono-middleware@0.2.1(hono@4.6.8)':
+  '@inialum/error-notification-service-hono-middleware@0.4.0(hono@4.6.8)':
     dependencies:
-      '@inialum/error-notification-service-javascript-sdk': 0.2.1
+      '@inialum/error-notification-service-javascript-sdk': 0.4.0
       hono: 4.6.8
 
-  '@inialum/error-notification-service-javascript-sdk@0.2.1':
+  '@inialum/error-notification-service-javascript-sdk@0.4.0':
     dependencies:
       openapi-fetch: 0.13.0
 
