@@ -4,9 +4,14 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 7
     groups:
-      test:
+      dev:
+        dependency-type: development
+        exclude-patterns:
+          - "@cloudflare/workers-types"
+          - wrangler
+      wrangler:
         patterns:
-          - "@vitest/*"
-          - "vitest*"
+          - "@cloudflare/workers-types"
+          - wrangler
