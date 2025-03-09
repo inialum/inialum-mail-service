@@ -23,7 +23,7 @@
 		"@inialum/error-notification-service-hono-middleware": "^0.4.0",
 		"@sendgrid/mail": "^8.1.4",
 		"hono": "^4.6.8",
-		"libmime": "^5.3.5",
+		"libmime": "^5.3.6",
 		"zod": "^3.23.8"
 	},
 	"devDependencies": {
