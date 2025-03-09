@@ -25,6 +25,12 @@ app.use('*', async (c, next) => {
 		token: ERROR_NOTIFICATION_TOKEN,
 		serviceName: 'inialum-mail-service',
 		environment: ENVIRONMENT,
+		beforeSend(error) {
+			// Ignore errors with no authorization included in request
+			if (error.message.includes('no authorization included in request')) {
+				return false
+			}
+		},
 	})
 
 	return await handleError(c, next)
