@@ -19,7 +19,7 @@
 	},
 	"dependencies": {
 		"@aws-sdk/client-sesv2": "^3.684.0",
-		"@hono/zod-openapi": "^0.16.4",
+		"@hono/zod-openapi": "^0.19.2",
 		"@inialum/error-notification-service-hono-middleware": "^0.4.0",
 		"@sendgrid/mail": "^8.1.4",
 		"hono": "^4.6.8",
