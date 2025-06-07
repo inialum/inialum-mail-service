@@ -15,7 +15,7 @@
 		"gen:cf-type": "wrangler types --env-interface CloudflareBindings",
 		"lint": "biome check",
 		"fix": "biome check --write",
-		"test": "vitest",
+		"test": "vitest run",
 		"test:ci": "pnpm run test:coverage",
 		"test:coverage": "vitest run --coverage",
 		"typecheck": "tsc --noEmit"
