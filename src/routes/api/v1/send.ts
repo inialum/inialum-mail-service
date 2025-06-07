@@ -11,9 +11,9 @@ import {
 } from '@/libs/api/v1/schema/send'
 import { sendEmailWithSES } from '@/libs/mail/ses'
 
-import type { EnvironmentType } from '@/types/Environment'
+import type { Bindings } from '@/types/Bindings'
 
-const sendApiV1 = new OpenAPIHono()
+const sendApiV1 = new OpenAPIHono<{ Bindings: Bindings }>()
 
 const route = createRoute({
 	method: 'post',
@@ -61,9 +61,7 @@ const route = createRoute({
 sendApiV1.openapi(
 	route,
 	async (c) => {
-		const { AWS_ACCESS_KEY_ID } = env<{ AWS_ACCESS_KEY_ID: string }>(c)
-		const { AWS_SECRET_ACCESS_KEY } = env<{ AWS_SECRET_ACCESS_KEY: string }>(c)
-		const { ENVIRONMENT } = env<{ ENVIRONMENT: EnvironmentType }>(c)
+		const { AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, ENVIRONMENT } = env(c)
 
 		const data = c.req.valid('json')
 

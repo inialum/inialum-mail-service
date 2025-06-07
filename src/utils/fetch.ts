@@ -1,5 +1,3 @@
-import type { Fetcher, RequestInit } from '@cloudflare/workers-types'
-
 import { FetchApiError } from '@/libs/error/applicationErrors'
 
 import type {

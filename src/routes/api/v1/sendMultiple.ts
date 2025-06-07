@@ -10,8 +10,9 @@ import {
 	SendMultipleApiResponseSchemaV1,
 } from '@/libs/api/v1/schema/sendMultiple'
 import { sendEmailWithSendGrid } from '@/libs/mail/sendgrid'
+import type { Bindings } from '@/types/Bindings'
 
-const sendMultipleApiV1 = new OpenAPIHono()
+const sendMultipleApiV1 = new OpenAPIHono<{ Bindings: Bindings }>()
 
 const route = createRoute({
 	method: 'post',
@@ -59,7 +60,7 @@ const route = createRoute({
 sendMultipleApiV1.openapi(
 	route,
 	async (c) => {
-		const { SENDGRID_TOKEN } = env<{ SENDGRID_TOKEN: string }>(c)
+		const { SENDGRID_TOKEN } = env(c)
 
 		const data = c.req.valid('json')
 
