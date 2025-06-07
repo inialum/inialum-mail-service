@@ -1,14 +1,15 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "inialum-mail-service",
-	"compatibility_date": "2024-09-02",
-	"node_compat": true,
+	"compatibility_date": "2024-12-30",
+	"compatibility_flags": ["nodejs_compat"],
 	"workers_dev": false,
 	"vars": {
 		"ENVIRONMENT": "production"
 	},
 	"observability": {
-		"enabled": true
+		"enabled": true,
+		"head_sampling_rate": 1
 	},
 	"d1_databases": [
 		{
