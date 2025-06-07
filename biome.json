@@ -6,7 +6,11 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"ignore": ["**/types/generated/*", "**/LICENSE"]
+		"ignore": [
+			"**/types/generated/*",
+			"**/LICENSE",
+			"worker-configuration.d.ts"
+		]
 	},
 	"formatter": {
 		"enabled": true,
