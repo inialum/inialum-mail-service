@@ -1,0 +1,30 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "inialum-mail-service",
+	"compatibility_date": "2024-09-02",
+	"node_compat": true,
+	"workers_dev": false,
+	"vars": {
+		"ENVIRONMENT": "production"
+	},
+	"observability": {
+		"enabled": true
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "mail-service-log",
+			"database_id": "${PRODUCTION_MAIL_SERVICE_LOG_DB_ID}",
+			"migrations_dir": "migrations"
+		}
+	],
+	"env": {
+		"staging": {
+			"name": "inialum-mail-service-staging",
+			"workers_dev": true,
+			"vars": {
+				"ENVIRONMENT": "staging"
+			}
+		}
+	}
+}
