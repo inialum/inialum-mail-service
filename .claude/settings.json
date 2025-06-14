@@ -1,0 +1,11 @@
+{
+	"permissions": {
+		"allow": [
+			"Bash(pnpm run fix:*)",
+			"Bash(pnpm run lint:*)",
+			"Bash(pnpm run test:*)",
+			"Bash(pnpm run typecheck:*)"
+		],
+		"deny": []
+	}
+}

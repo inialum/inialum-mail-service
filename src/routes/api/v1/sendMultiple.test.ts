@@ -1,18 +1,29 @@
 import type { ZodError } from 'zod'
 
-import type { SendMultipleApiRequestV1 } from '@/libs/api/v1/schema/sendMultiple'
-import { sendEmailWithSendGrid } from '@/libs/mail/sendgrid'
 import { apiV1 } from '.'
+import type { SendMultipleApiRequestV1 } from '../../../libs/api/v1/schema/sendMultiple'
+import { saveMailLogToR2 } from '../../../libs/mail/r2Logger'
+import { sendEmailWithSendGrid } from '../../../libs/mail/sendgrid'
 
-vi.mock('@/libs/mail/sendgrid', () => {
+vi.mock('../../../libs/mail/sendgrid', () => {
 	return {
 		sendEmailWithSendGrid: vi.fn(),
 	}
 })
 
+vi.mock('../../../libs/mail/r2Logger', () => {
+	return {
+		saveMailLogToR2: vi.fn(),
+		generateMessageId: vi.fn(() => 'test-message-id'),
+	}
+})
+
 vi.mock('hono/adapter', () => {
 	return {
-		env: () => getMiniflareBindings(),
+		env: vi.fn(() => ({
+			SENDGRID_TOKEN: 'test-sendgrid-token',
+			MAIL_LOGS_BUCKET: 'mock-r2-bucket',
+		})),
 	}
 })
 
@@ -29,6 +40,7 @@ describe('API v1', () => {
 
 	test('POST /send (should return data with no errors)', async () => {
 		vi.mocked(sendEmailWithSendGrid).mockResolvedValueOnce()
+		vi.mocked(saveMailLogToR2).mockResolvedValueOnce()
 
 		const res = await apiV1.request('/send-multiple', {
 			method: 'POST',

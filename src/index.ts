@@ -4,13 +4,14 @@ import { cors } from 'hono/cors'
 import { jwt } from 'hono/jwt'
 import { secureHeaders } from 'hono/secure-headers'
 
-import { API_ENDPOINT, ORIGINS } from '@/constants/config'
+import {
+	type EnvironmentType,
+	notifyError,
+} from '@inialum/error-notification-service-hono-middleware'
 
-import { api } from '@/routes/api'
+import { API_ENDPOINT, ORIGINS } from './constants/config'
 
-import type { EnvironmentType } from '@/types/Environment'
-
-import { notifyError } from '@inialum/error-notification-service-hono-middleware'
+import { api } from './routes/api'
 
 const app = new OpenAPIHono()
 

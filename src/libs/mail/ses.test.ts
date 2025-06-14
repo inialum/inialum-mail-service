@@ -5,9 +5,9 @@ import {
 } from '@aws-sdk/client-sesv2'
 import { mockClient } from 'aws-sdk-client-mock'
 
-import { SESApiError } from '@/libs/error/applicationErrors'
+import { SESApiError } from '../error/applicationErrors'
 
-import type { Mail } from '@/types/Mail'
+import type { Mail } from '../../types/Mail'
 
 import { sendEmailWithSES } from './ses'
 
