@@ -59,6 +59,7 @@ export const sendEmailWithSES = async (
 		})
 		const command = new SendEmailCommand(params)
 		const res = await client.send(command)
+
 		if (!res.$metadata.httpStatusCode || res.$metadata.httpStatusCode !== 200) {
 			throw new SESApiError(
 				`Failed to send email via SES\ntoAddress: ${toAddress}`,

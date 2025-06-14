@@ -24,7 +24,8 @@ export const sendEmailWithSendGrid = async (
 
 	try {
 		sgMail.setApiKey(token)
-		await sgMail.sendMultiple(params)
+		const response = await sgMail.sendMultiple(params)
+		return response
 	} catch (error) {
 		throw new SendGridApiError(
 			error instanceof ResponseError
