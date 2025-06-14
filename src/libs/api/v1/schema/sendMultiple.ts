@@ -1,5 +1,5 @@
-import { MailBodyContentSchema } from '@/libs/api/v1/schema/send'
 import { z } from '@hono/zod-openapi'
+import { MailBodyContentSchema } from './send'
 
 /**
  * Schema for request of POST /send-multiple

@@ -2,11 +2,11 @@ import { encodeWord } from 'libmime'
 
 import sgMail, { ResponseError, type MailDataRequired } from '@sendgrid/mail'
 
-import { DEFAULT_MAIL_FROM_NAME } from '@/constants/mail'
+import { DEFAULT_MAIL_FROM_NAME } from '../../constants/mail'
 
-import { SendGridApiError } from '@/libs/error/applicationErrors'
+import { SendGridApiError } from '../error/applicationErrors'
 
-import type { Mail } from '@/types/Mail'
+import type { Mail } from '../../types/Mail'
 
 export const sendEmailWithSendGrid = async (
 	{ fromAddress, toAddresses, subject, body: { text, html } }: Mail,
@@ -24,7 +24,8 @@ export const sendEmailWithSendGrid = async (
 
 	try {
 		sgMail.setApiKey(token)
-		await sgMail.sendMultiple(params)
+		const response = await sgMail.sendMultiple(params)
+		return response
 	} catch (error) {
 		throw new SendGridApiError(
 			error instanceof ResponseError

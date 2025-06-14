@@ -1,11 +1,11 @@
 import type { ZodError } from 'zod'
 
-import type { SendApiRequestV1 } from '@/libs/api/v1/schema/send'
-import { sendEmailWithSES } from '@/libs/mail/ses'
+import type { SendApiRequestV1 } from '../../../libs/api/v1/schema/send'
+import { sendEmailWithSES } from '../../../libs/mail/ses'
 
 import { apiV1 } from '.'
 
-vi.mock('@/libs/mail/ses', () => {
+vi.mock('../../../libs/mail/ses', () => {
 	return {
 		sendEmailWithSES: vi.fn(),
 	}

@@ -1,12 +1,19 @@
 import type { ZodError } from 'zod'
 
-import type { SendMultipleApiRequestV1 } from '@/libs/api/v1/schema/sendMultiple'
-import { sendEmailWithSendGrid } from '@/libs/mail/sendgrid'
 import { apiV1 } from '.'
+import type { SendMultipleApiRequestV1 } from '../../../libs/api/v1/schema/sendMultiple'
+import { logEmailSend } from '../../../libs/db/emailLogs'
+import { sendEmailWithSendGrid } from '../../../libs/mail/sendgrid'
 
-vi.mock('@/libs/mail/sendgrid', () => {
+vi.mock('../../../libs/mail/sendgrid', () => {
 	return {
 		sendEmailWithSendGrid: vi.fn(),
+	}
+})
+
+vi.mock('../../../libs/db/emailLogs', () => {
+	return {
+		logEmailSend: vi.fn(),
 	}
 })
 
@@ -28,15 +35,28 @@ describe('API v1', () => {
 	}
 
 	test('POST /send (should return data with no errors)', async () => {
-		vi.mocked(sendEmailWithSendGrid).mockResolvedValueOnce()
-
-		const res = await apiV1.request('/send-multiple', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
+		vi.mocked(sendEmailWithSendGrid).mockResolvedValueOnce([
+			{
+				statusCode: 202,
+				body: {},
+				headers: {},
 			},
-			body: JSON.stringify(apiBodyContent),
-		})
+			{},
+		])
+
+		const res = await apiV1.request(
+			'/send-multiple',
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(apiBodyContent),
+			},
+			{
+				DB: getMiniflareBindings().DB,
+			},
+		)
 
 		expect(res.status).toBe(200)
 		expect(await res.json()).toEqual({

@@ -6,12 +6,12 @@ import {
 } from '@aws-sdk/client-sesv2'
 import { encodeWord } from 'libmime'
 
-import { DEFAULT_AWS_REGION } from '@/constants/aws'
-import { DEFAULT_MAIL_FROM_NAME } from '@/constants/mail'
+import { DEFAULT_AWS_REGION } from '../../constants/aws'
+import { DEFAULT_MAIL_FROM_NAME } from '../../constants/mail'
 
-import { SESApiError } from '@/libs/error/applicationErrors'
+import { SESApiError } from '../error/applicationErrors'
 
-import type { Mail } from '@/types/Mail'
+import type { Mail } from '../../types/Mail'
 
 export const sendEmailWithSES = async (
 	{ fromAddress, toAddresses, subject, body }: Mail,
@@ -59,6 +59,7 @@ export const sendEmailWithSES = async (
 		})
 		const command = new SendEmailCommand(params)
 		const res = await client.send(command)
+
 		if (!res.$metadata.httpStatusCode || res.$metadata.httpStatusCode !== 200) {
 			throw new SESApiError(
 				`Failed to send email via SES\ntoAddress: ${toAddress}`,
