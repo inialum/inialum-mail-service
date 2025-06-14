@@ -6,10 +6,10 @@ import {
 	LogsApiResponseSchemaV1,
 	LogsQuerySchema,
 	StatsApiResponseSchemaV1,
-} from '@/libs/api/v1/schema/logs'
-import { createDbClient } from '@/libs/db/client'
-import { getEmailLogs, getEmailStats } from '@/libs/db/emailLogQueries'
-import type { Bindings } from '@/types/Bindings'
+} from '../../../libs/api/v1/schema/logs'
+import { createDbClient } from '../../../libs/db/client'
+import { getEmailLogs, getEmailStats } from '../../../libs/db/emailLogQueries'
+import type { Bindings } from '../../../types/Bindings'
 
 export const logsApiV1 = new OpenAPIHono<{ Bindings: Bindings }>()
 

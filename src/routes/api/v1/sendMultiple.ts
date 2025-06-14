@@ -4,14 +4,14 @@ import { env } from 'hono/adapter'
 import {
 	SendApi400ErrorSchemaV1,
 	SendApi500ErrorSchemaV1,
-} from '@/libs/api/v1/schema/send'
+} from '../../../libs/api/v1/schema/send'
 import {
 	SendMultipleApiRequestSchemaV1,
 	SendMultipleApiResponseSchemaV1,
-} from '@/libs/api/v1/schema/sendMultiple'
-import { logEmailSend } from '@/libs/db/emailLogs'
-import { sendEmailWithSendGrid } from '@/libs/mail/sendgrid'
-import type { Bindings } from '@/types/Bindings'
+} from '../../../libs/api/v1/schema/sendMultiple'
+import { logEmailSend } from '../../../libs/db/emailLogs'
+import { sendEmailWithSendGrid } from '../../../libs/mail/sendgrid'
+import type { Bindings } from '../../../types/Bindings'
 
 const sendMultipleApiV1 = new OpenAPIHono<{ Bindings: Bindings }>()
 

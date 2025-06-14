@@ -1,8 +1,8 @@
-import { getEmailLogs, getEmailStats } from '@/libs/db/emailLogQueries'
+import { getEmailLogs, getEmailStats } from '../../../libs/db/emailLogQueries'
 
 import { logsApiV1 } from './logs'
 
-vi.mock('@/libs/db/emailLogQueries', () => {
+vi.mock('../../../libs/db/emailLogQueries', () => {
 	return {
 		getEmailLogs: vi.fn(),
 		getEmailStats: vi.fn(),

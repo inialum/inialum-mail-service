@@ -1,6 +1,6 @@
 import type { Get, UnionToIntersection } from 'type-fest'
 
-import type { paths } from '@/types/generated/schema'
+import type { paths } from './generated/schema'
 
 const HTTP_STATUS_CODES = [200, 400, 401, 404, 500] as const
 

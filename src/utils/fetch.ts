@@ -1,11 +1,11 @@
-import { FetchApiError } from '@/libs/error/applicationErrors'
+import { FetchApiError } from '../libs/error/applicationErrors'
 
 import type {
 	HttpMethods,
 	ResponseData,
 	UrlPaths,
-} from '@/types/apiSchemaHelper'
-import type { FetchConfig } from '@/types/fetch'
+} from '../types/apiSchemaHelper'
+import type { FetchConfig } from '../types/fetch'
 
 /**
  * Fetches INIALUM microservices API.

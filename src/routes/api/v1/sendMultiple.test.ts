@@ -1,17 +1,17 @@
 import type { ZodError } from 'zod'
 
-import type { SendMultipleApiRequestV1 } from '@/libs/api/v1/schema/sendMultiple'
-import { logEmailSend } from '@/libs/db/emailLogs'
-import { sendEmailWithSendGrid } from '@/libs/mail/sendgrid'
 import { apiV1 } from '.'
+import type { SendMultipleApiRequestV1 } from '../../../libs/api/v1/schema/sendMultiple'
+import { logEmailSend } from '../../../libs/db/emailLogs'
+import { sendEmailWithSendGrid } from '../../../libs/mail/sendgrid'
 
-vi.mock('@/libs/mail/sendgrid', () => {
+vi.mock('../../../libs/mail/sendgrid', () => {
 	return {
 		sendEmailWithSendGrid: vi.fn(),
 	}
 })
 
-vi.mock('@/libs/db/emailLogs', () => {
+vi.mock('../../../libs/db/emailLogs', () => {
 	return {
 		logEmailSend: vi.fn(),
 	}

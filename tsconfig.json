@@ -9,12 +9,7 @@
 		"lib": ["esnext"],
 		"types": ["vitest/globals", "vitest-environment-miniflare/globals"],
 		"jsx": "react-jsx",
-		"jsxImportSource": "hono/jsx",
-		"baseUrl": ".",
-		"paths": {
-			"@/*": ["./src/*"],
-			"@Root/*": ["./*"]
-		}
+		"jsxImportSource": "hono/jsx"
 	},
 	"include": ["src", "drizzle.config.ts", "worker-configuration.d.ts"],
 	"exclude": ["node_modules"]

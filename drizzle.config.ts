@@ -1,7 +1,7 @@
 import dotenv from 'dotenv'
 import { defineConfig } from 'drizzle-kit'
 
-import { getEnv } from '@/utils/getEnv'
+import { getEnv } from './src/utils/getEnv'
 
 dotenv.config({ path: './.dev.vars' })
 

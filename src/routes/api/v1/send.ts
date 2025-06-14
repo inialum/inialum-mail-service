@@ -1,17 +1,17 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
 import { env } from 'hono/adapter'
 
-import { LOCAL_SES_API_ENDPOINT } from '@/constants/mail'
+import { LOCAL_SES_API_ENDPOINT } from '../../../constants/mail'
 
 import {
 	SendApi400ErrorSchemaV1,
 	SendApi500ErrorSchemaV1,
 	SendApiRequestSchemaV1,
 	SendApiResponseSchemaV1,
-} from '@/libs/api/v1/schema/send'
-import { sendEmailWithSES } from '@/libs/mail/ses'
+} from '../../../libs/api/v1/schema/send'
+import { sendEmailWithSES } from '../../../libs/mail/ses'
 
-import type { Bindings } from '@/types/Bindings'
+import type { Bindings } from '../../../types/Bindings'
 
 const sendApiV1 = new OpenAPIHono<{ Bindings: Bindings }>()
 

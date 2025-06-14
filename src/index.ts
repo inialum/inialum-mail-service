@@ -4,12 +4,12 @@ import { cors } from 'hono/cors'
 import { jwt } from 'hono/jwt'
 import { secureHeaders } from 'hono/secure-headers'
 
-import { API_ENDPOINT, ORIGINS } from '@/constants/config'
+import { API_ENDPOINT, ORIGINS } from './constants/config'
 
-import { api } from '@/routes/api'
+import { api } from './routes/api'
 
-import type { Bindings } from '@/types/Bindings'
 import { notifyError } from '@inialum/error-notification-service-hono-middleware'
+import type { Bindings } from './types/Bindings'
 
 const app = new OpenAPIHono<{ Bindings: Bindings }>()
 

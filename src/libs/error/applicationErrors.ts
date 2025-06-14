@@ -3,7 +3,7 @@ import type {
 	HttpStatusCode,
 	ResponseData,
 	UrlPaths,
-} from '@/types/apiSchemaHelper'
+} from '../../types/apiSchemaHelper'
 
 /**
  * This error is thrown when SES API returns an error.
