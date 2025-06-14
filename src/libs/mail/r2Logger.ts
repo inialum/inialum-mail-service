@@ -32,7 +32,7 @@ export async function saveMailLogToR2(
 		.split('.')[0]
 		.replace(/:/g, '-')
 
-	const key = `mail-service/${dateStr}/${timeStr}-${logData.messageId}.json`
+	const key = `multiple/${dateStr}/${timeStr}-${logData.messageId}.json`
 
 	await bucket.put(key, JSON.stringify(logData, null, 2), {
 		httpMetadata: {
