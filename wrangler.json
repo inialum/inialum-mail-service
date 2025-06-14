@@ -11,14 +11,6 @@
 		"enabled": true,
 		"head_sampling_rate": 1
 	},
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_name": "mail-service-log",
-			"database_id": "${PRODUCTION_MAIL_SERVICE_LOG_DB_ID}",
-			"migrations_dir": "migrations"
-		}
-	],
 	"r2_buckets": [
 		{
 			"binding": "MAIL_LOGS_BUCKET",
