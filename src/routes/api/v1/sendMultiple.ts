@@ -9,10 +9,7 @@ import {
 	SendMultipleApiRequestSchemaV1,
 	SendMultipleApiResponseSchemaV1,
 } from '../../../libs/api/v1/schema/sendMultiple'
-import {
-	generateMessageId,
-	saveMailLogToR2,
-} from '../../../libs/mail/r2Logger'
+import { generateMessageId, saveMailLogToR2 } from '../../../libs/mail/r2Logger'
 import { sendEmailWithSendGrid } from '../../../libs/mail/sendgrid'
 import type { Bindings } from '../../../types/Bindings'
 
