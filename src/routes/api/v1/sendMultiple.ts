@@ -9,6 +9,7 @@ import {
 	SendMultipleApiRequestSchemaV1,
 	SendMultipleApiResponseSchemaV1,
 } from '@/libs/api/v1/schema/sendMultiple'
+import { logEmailSend } from '@/libs/db/emailLogs'
 import { sendEmailWithSendGrid } from '@/libs/mail/sendgrid'
 import type { Bindings } from '@/types/Bindings'
 
@@ -64,22 +65,55 @@ sendMultipleApiV1.openapi(
 
 		const data = c.req.valid('json')
 
-		await sendEmailWithSendGrid(
-			{
-				fromAddress: data.from,
-				toAddresses: data.to,
-				subject: data.subject,
-				body: data.body,
-			},
-			SENDGRID_TOKEN,
-		)
+		try {
+			await sendEmailWithSendGrid(
+				{
+					fromAddress: data.from,
+					toAddresses: data.to,
+					subject: data.subject,
+					body: data.body,
+				},
+				SENDGRID_TOKEN,
+			)
 
-		return c.json(
-			{
-				status: 'ok',
-			},
-			200,
-		)
+			// Log successful email send for each recipient
+			if (c.env.DB) {
+				for (const toAddress of data.to) {
+					await logEmailSend(c.env.DB, {
+						fromAddress: data.from,
+						toAddress,
+						subject: data.subject,
+						status: 'success',
+						statusCode: 200,
+						provider: 'sendgrid',
+					})
+				}
+			}
+
+			return c.json(
+				{
+					status: 'ok',
+				},
+				200,
+			)
+		} catch (error) {
+			// Log failed email send for each recipient
+			if (c.env.DB) {
+				for (const toAddress of data.to) {
+					await logEmailSend(c.env.DB, {
+						fromAddress: data.from,
+						toAddress,
+						subject: data.subject,
+						status: 'failed',
+						errorMessage:
+							error instanceof Error ? error.message : 'Unknown error',
+						provider: 'sendgrid',
+					})
+				}
+			}
+
+			throw error
+		}
 	},
 	(result, c) => {
 		if (!result.success) {
