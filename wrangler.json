@@ -19,6 +19,12 @@
 			"migrations_dir": "migrations"
 		}
 	],
+	"r2_buckets": [
+		{
+			"binding": "MAIL_LOGS_BUCKET",
+			"bucket_name": "inialum-mail-service-logs"
+		}
+	],
 	"env": {
 		"staging": {
 			"name": "inialum-mail-service-staging",
