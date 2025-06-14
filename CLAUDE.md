@@ -12,10 +12,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `pnpm run lint` - Check code style
 - `pnpm run typecheck` - TypeScript type checking
 
-**Database:**
-- `pnpm run db:makemigrations` - Generate Drizzle migrations
-- `pnpm run db:migrate` - Apply migrations
-
 **Authentication:**
 - `pnpm run create-token` - Generate JWT token for API testing
 
@@ -23,25 +19,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Platform:** Cloudflare Workers with Hono framework, deployed via GitHub Actions
 
-**Email Providers:** AWS SES (primary) and SendGrid (fallback), with automatic logging to D1 database
+**Email Providers:** AWS SES (primary) and SendGrid (fallback), with automatic logging to R2 storage
 
 **Authentication:** JWT-based with bearer tokens, all API routes under `/api/*` are protected
 
 **API Structure:**
 - OpenAPI 3.0 schema served at `/schema/v1`
 - All endpoints under `/api/v1/`
-- Main routes: send email, send multiple emails, view logs
+- Main routes: send email, send multiple emails
 - Error handling with automatic notification service integration
 
-**Database:** Cloudflare D1 (SQLite) with Drizzle ORM
-- Schema: `mailLogs` table tracking all email attempts
+**Storage:** Cloudflare R2 for mail logs
+- JSON-based logging of all email attempts
 - Supports both success/failure logging with provider info
 
 **Key Environment Variables:**
 - `TOKEN_SECRET` - JWT signing secret
 - `ENVIRONMENT` - production/staging flag
 - AWS SES and SendGrid credentials
-- D1 database binding
+- R2 bucket binding for log storage
 
 **Development Notes:**
 - Use TDD approach when making changes
