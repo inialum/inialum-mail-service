@@ -50,3 +50,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Production deploys from `main` branch
 - Use Japanese to communicate with the developer
 - Use English for code comments and documentation
+
+**Implementation Guidelines:**
+- Always present a detailed implementation plan before starting any code changes
+- Get approval from the developer before proceeding with implementation
+- Break down complex features into clear, manageable steps
+- Explain the reasoning behind architectural decisions
