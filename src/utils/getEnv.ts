@@ -1,4 +1,4 @@
-import { assertIsDefined } from '@/utils/general'
+import { assertIsDefined } from './general'
 
 export const getEnv = (arg: string | undefined) => {
 	assertIsDefined<string | undefined>(arg)

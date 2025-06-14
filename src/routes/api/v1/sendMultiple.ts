@@ -4,12 +4,12 @@ import { env } from 'hono/adapter'
 import {
 	SendApi400ErrorSchemaV1,
 	SendApi500ErrorSchemaV1,
-} from '@/libs/api/v1/schema/send'
+} from '../../../libs/api/v1/schema/send'
 import {
 	SendMultipleApiRequestSchemaV1,
 	SendMultipleApiResponseSchemaV1,
-} from '@/libs/api/v1/schema/sendMultiple'
-import { sendEmailWithSendGrid } from '@/libs/mail/sendgrid'
+} from '../../../libs/api/v1/schema/sendMultiple'
+import { sendEmailWithSendGrid } from '../../../libs/mail/sendgrid'
 
 const sendMultipleApiV1 = new OpenAPIHono()
 
