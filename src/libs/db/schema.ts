@@ -16,4 +16,3 @@ export const mailLogs = sqliteTable('mail_logs', {
 
 // Types inferred from the schema
 export type MailLog = typeof mailLogs.$inferSelect
-export type NewMailLog = typeof mailLogs.$inferInsert

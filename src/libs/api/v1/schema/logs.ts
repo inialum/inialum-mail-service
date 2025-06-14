@@ -65,29 +65,6 @@ export const LogsApiResponseSchemaV1 = z
 	.openapi('LogsResponse')
 
 /**
- * Schema for email statistics
- */
-export const EmailStatsSchema = z
-	.object({
-		totalCount: z.number().openapi({
-			example: 100,
-		}),
-		successCount: z.number().openapi({
-			example: 95,
-		}),
-		failedCount: z.number().openapi({
-			example: 5,
-		}),
-		sesCount: z.number().openapi({
-			example: 80,
-		}),
-		sendgridCount: z.number().openapi({
-			example: 20,
-		}),
-	})
-	.openapi('EmailStats')
-
-/**
  * Schema for response of GET /api/v1/logs/stats
  */
 export const StatsApiResponseSchemaV1 = z
