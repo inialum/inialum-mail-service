@@ -61,7 +61,7 @@ const route = createRoute({
 sendMultipleApiV1.openapi(
 	route,
 	async (c) => {
-		const { SENDGRID_TOKEN, MAIL_LOGS_BUCKET } = env(c)
+		const { ENVIRONMENT, SENDGRID_TOKEN, MAIL_LOGS_BUCKET } = env(c)
 		const messageId = generateMessageId()
 		const timestamp = new Date().toISOString()
 
@@ -79,14 +79,16 @@ sendMultipleApiV1.openapi(
 			)
 
 			try {
-				await saveMailLogToR2(MAIL_LOGS_BUCKET, {
-					timestamp,
-					from: data.from,
-					to: data.to,
-					subject: data.subject,
-					status: 'success',
-					messageId,
-				})
+				if (ENVIRONMENT === 'production') {
+					await saveMailLogToR2(MAIL_LOGS_BUCKET, {
+						timestamp,
+						from: data.from,
+						to: data.to,
+						subject: data.subject,
+						status: 'success',
+						messageId,
+					})
+				}
 			} catch (logError) {
 				console.error('Failed to save success log to R2:', logError)
 			}
@@ -99,15 +101,17 @@ sendMultipleApiV1.openapi(
 			)
 		} catch (error) {
 			try {
-				await saveMailLogToR2(MAIL_LOGS_BUCKET, {
-					timestamp,
-					from: data.from,
-					to: data.to,
-					subject: data.subject,
-					status: 'error',
-					messageId,
-					error: error instanceof Error ? error.message : String(error),
-				})
+				if (ENVIRONMENT === 'production') {
+					await saveMailLogToR2(MAIL_LOGS_BUCKET, {
+						timestamp,
+						from: data.from,
+						to: data.to,
+						subject: data.subject,
+						status: 'error',
+						messageId,
+						error: error instanceof Error ? error.message : String(error),
+					})
+				}
 			} catch (logError) {
 				console.error('Failed to save error log to R2:', logError)
 			}

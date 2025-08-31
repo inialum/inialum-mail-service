@@ -21,6 +21,7 @@ vi.mock('../../../libs/mail/r2Logger', () => ({
 vi.mock('hono/adapter', () => {
 	return {
 		env: vi.fn(() => ({
+			ENVIRONMENT: 'production',
 			SMTP_HOST: 'smtp.example.com',
 			SMTP_PORT: '587',
 			SMTP_USER: 'user@example.com',
@@ -150,6 +151,11 @@ describe('sendMultipleSMTPApiV1', () => {
 		)
 		vi.mocked(saveMailLogToR2).mockResolvedValue()
 
+		// Mock console.error to suppress error output during test
+		const consoleErrorSpy = vi
+			.spyOn(console, 'error')
+			.mockImplementation(() => {})
+
 		const res = await sendMultipleSMTPApiV1.request('/', {
 			method: 'POST',
 			headers: {
@@ -169,6 +175,8 @@ describe('sendMultipleSMTPApiV1', () => {
 			messageId: 'test-message-id',
 			error: 'SMTP server connection failed',
 		})
+
+		consoleErrorSpy.mockRestore()
 	})
 
 	test('should handle R2 logging errors gracefully', async () => {
