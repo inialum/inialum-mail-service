@@ -29,7 +29,7 @@ describe('sendEmailWithSMTP', () => {
 		secure: false,
 	}
 
-	it('should send email successfully to multiple recipients', async () => {
+	test('should send email successfully to multiple recipients', async () => {
 		const mockSendMail = vi.fn().mockResolvedValue({
 			messageId: 'test-message-id',
 			accepted: mockMail.toAddresses,
@@ -71,7 +71,7 @@ describe('sendEmailWithSMTP', () => {
 		expect(mockTransporter.close).toHaveBeenCalled()
 	})
 
-	it('should send email without HTML when html is not provided', async () => {
+	test('should send email without HTML when html is not provided', async () => {
 		const mockMailWithoutHtml: Mail = {
 			...mockMail,
 			body: {
@@ -103,7 +103,7 @@ describe('sendEmailWithSMTP', () => {
 		})
 	})
 
-	it('should throw SMTPApiError when transporter fails', async () => {
+	test('should throw SMTPApiError when transporter fails', async () => {
 		const mockError = new Error('SMTP connection failed')
 		const mockSendMail = vi.fn().mockRejectedValue(mockError)
 
@@ -121,7 +121,7 @@ describe('sendEmailWithSMTP', () => {
 		expect(mockTransporter.close).toHaveBeenCalled()
 	})
 
-	it('should throw SMTPApiError when some recipients are rejected', async () => {
+	test('should throw SMTPApiError when some recipients are rejected', async () => {
 		const mockSendMail = vi.fn().mockResolvedValue({
 			messageId: 'test-message-id',
 			accepted: ['recipient1@example.com'],
@@ -142,7 +142,7 @@ describe('sendEmailWithSMTP', () => {
 		expect(mockTransporter.close).toHaveBeenCalled()
 	})
 
-	it('should use custom SMTP settings when provided', async () => {
+	test('should use custom SMTP settings when provided', async () => {
 		const customConfig = {
 			host: 'custom.smtp.com',
 			port: 465,
