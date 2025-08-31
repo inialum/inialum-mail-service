@@ -25,7 +25,6 @@ vi.mock('hono/adapter', () => {
 			SMTP_PORT: '587',
 			SMTP_USER: 'user@example.com',
 			SMTP_PASS: 'password',
-			SMTP_SECURE: 'false',
 			MAIL_LOGS_BUCKET: {} as R2Bucket,
 		})),
 	}

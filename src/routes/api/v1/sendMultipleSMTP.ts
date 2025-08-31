@@ -63,14 +63,8 @@ const route = createRoute({
 sendMultipleSMTPApiV1.openapi(
 	route,
 	async (c) => {
-		const {
-			SMTP_HOST,
-			SMTP_PORT,
-			SMTP_USER,
-			SMTP_PASS,
-			SMTP_SECURE,
-			MAIL_LOGS_BUCKET,
-		} = env(c)
+		const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_LOGS_BUCKET } =
+			env(c)
 		const messageId = generateMessageId()
 		const timestamp = new Date().toISOString()
 
@@ -87,12 +81,13 @@ sendMultipleSMTPApiV1.openapi(
 			)
 		}
 
+		const port = SMTP_PORT ? Number.parseInt(SMTP_PORT, 10) : DEFAULT_SMTP_PORT
 		const smtpConfig = {
 			host: SMTP_HOST,
-			port: SMTP_PORT ? Number.parseInt(SMTP_PORT, 10) : DEFAULT_SMTP_PORT,
+			port,
 			user: SMTP_USER,
 			pass: SMTP_PASS,
-			secure: SMTP_SECURE === 'true',
+			secure: port === 465, // SSL for port 465, STARTTLS for others
 		}
 
 		try {
