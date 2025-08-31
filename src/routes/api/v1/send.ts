@@ -1,7 +1,6 @@
-import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
-import { env } from 'hono/adapter'
-
+import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
 import type { EnvironmentType } from '@inialum/error-notification-service-hono-middleware'
+import { env } from 'hono/adapter'
 
 import { LOCAL_SES_API_ENDPOINT } from '../../../constants/mail'
 import {

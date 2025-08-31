@@ -1,9 +1,9 @@
 import type { ZodError } from 'zod'
 
-import { apiV1 } from '.'
 import type { SendMultipleApiRequestV1 } from '../../../libs/api/v1/schema/sendMultiple'
 import { saveMailLogToR2 } from '../../../libs/mail/r2Logger'
 import { sendEmailWithSendGrid } from '../../../libs/mail/sendgrid'
+import { apiV1 } from '.'
 
 vi.mock('../../../libs/mail/sendgrid', () => {
 	return {

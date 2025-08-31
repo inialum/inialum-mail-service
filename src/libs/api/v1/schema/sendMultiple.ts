@@ -1,4 +1,5 @@
 import { z } from '@hono/zod-openapi'
+
 import { MailBodyContentSchema } from './send'
 
 /**
