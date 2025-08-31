@@ -21,6 +21,7 @@ vi.mock('../../../libs/mail/r2Logger', () => {
 vi.mock('hono/adapter', () => {
 	return {
 		env: vi.fn(() => ({
+			ENVIRONMENT: 'production',
 			SENDGRID_TOKEN: 'test-sendgrid-token',
 			MAIL_LOGS_BUCKET: 'mock-r2-bucket',
 		})),
