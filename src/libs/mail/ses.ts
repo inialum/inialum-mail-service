@@ -8,10 +8,8 @@ import { encodeWord } from 'libmime'
 
 import { DEFAULT_AWS_REGION } from '../../constants/aws'
 import { DEFAULT_MAIL_FROM_NAME } from '../../constants/mail'
-
-import { SESApiError } from '../error/applicationErrors'
-
 import type { Mail } from '../../types/Mail'
+import { SESApiError } from '../error/applicationErrors'
 
 export const sendEmailWithSES = async (
 	{ fromAddress, toAddresses, subject, body }: Mail,
