@@ -36,6 +36,21 @@ export class SendGridApiError extends Error {
 }
 
 /**
+ * This error is thrown when SMTP operation returns an error.
+ */
+export class SMTPApiError extends Error {
+	static {
+		// biome-ignore lint/complexity/noThisInStatic: For avoiding TypeError
+		this.prototype.name = 'SMTPApiError'
+	}
+
+	// biome-ignore lint/complexity/noUselessConstructor: This constructor is necessary to set the name of the error
+	constructor(message: string, options?: ErrorOptions) {
+		super(message, options)
+	}
+}
+
+/**
  * This error is thrown when fetchApi fails to fetch the API
  */
 export class FetchApiError extends Error {
