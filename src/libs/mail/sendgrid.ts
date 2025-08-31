@@ -1,12 +1,9 @@
+import sgMail, { type MailDataRequired, ResponseError } from '@sendgrid/mail'
 import { encodeWord } from 'libmime'
 
-import sgMail, { ResponseError, type MailDataRequired } from '@sendgrid/mail'
-
 import { DEFAULT_MAIL_FROM_NAME } from '../../constants/mail'
-
-import { SendGridApiError } from '../error/applicationErrors'
-
 import type { Mail } from '../../types/Mail'
+import { SendGridApiError } from '../error/applicationErrors'
 
 export const sendEmailWithSendGrid = async (
 	{ fromAddress, toAddresses, subject, body: { text, html } }: Mail,

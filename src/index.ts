@@ -1,16 +1,14 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
+import {
+	type EnvironmentType,
+	notifyError,
+} from '@inialum/error-notification-service-hono-middleware'
 import { env } from 'hono/adapter'
 import { cors } from 'hono/cors'
 import { jwt } from 'hono/jwt'
 import { secureHeaders } from 'hono/secure-headers'
 
-import {
-	type EnvironmentType,
-	notifyError,
-} from '@inialum/error-notification-service-hono-middleware'
-
 import { API_ENDPOINT, ORIGINS } from './constants/config'
-
 import { api } from './routes/api'
 
 const app = new OpenAPIHono()

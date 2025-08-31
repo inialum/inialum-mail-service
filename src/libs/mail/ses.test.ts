@@ -5,10 +5,8 @@ import {
 } from '@aws-sdk/client-sesv2'
 import { mockClient } from 'aws-sdk-client-mock'
 
-import { SESApiError } from '../error/applicationErrors'
-
 import type { Mail } from '../../types/Mail'
-
+import { SESApiError } from '../error/applicationErrors'
 import { sendEmailWithSES } from './ses'
 
 const SESv2Mock = mockClient(SESv2Client)
