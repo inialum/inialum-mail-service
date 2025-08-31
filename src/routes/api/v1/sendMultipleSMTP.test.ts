@@ -1,11 +1,11 @@
 import { env } from 'hono/adapter'
+import type { SentMessageInfo } from 'nodemailer'
+
+import type { SendMultipleSMTPApiRequestV1 } from '../../../libs/api/v1/schema/sendMultipleSMTP'
 import { SMTPApiError } from '../../../libs/error/applicationErrors'
 import { saveMailLogToR2 } from '../../../libs/mail/r2Logger'
 import { sendEmailWithSMTP } from '../../../libs/mail/smtp'
 import { sendMultipleSMTPApiV1 } from './sendMultipleSMTP'
-
-import type { SentMessageInfo } from 'nodemailer'
-import type { SendMultipleSMTPApiRequestV1 } from '../../../libs/api/v1/schema/sendMultipleSMTP'
 
 // Mock the SMTP send function
 vi.mock('../../../libs/mail/smtp', () => ({

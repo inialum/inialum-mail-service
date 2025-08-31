@@ -8,9 +8,8 @@ import {
 	SMTP_MAX_CONNECTIONS,
 	SMTP_MAX_MESSAGES,
 } from '../../constants/smtp'
-import { SMTPApiError } from '../error/applicationErrors'
-
 import type { Mail } from '../../types/Mail'
+import { SMTPApiError } from '../error/applicationErrors'
 
 export type SMTPConfig = {
 	host: string

@@ -1,10 +1,9 @@
+import type { Transporter } from 'nodemailer'
 import nodemailer from 'nodemailer'
 
+import type { Mail } from '../../types/Mail'
 import { SMTPApiError } from '../error/applicationErrors'
 import { sendEmailWithSMTP } from './smtp'
-
-import type { Transporter } from 'nodemailer'
-import type { Mail } from '../../types/Mail'
 
 // Mock nodemailer
 vi.mock('nodemailer')

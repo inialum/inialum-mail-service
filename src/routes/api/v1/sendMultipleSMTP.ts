@@ -1,7 +1,7 @@
-import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
+import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
 import { env } from 'hono/adapter'
 
-import { DEFAULT_SMTP_PORT, DEFAULT_SMTP_SECURE } from '../../../constants/smtp'
+import { DEFAULT_SMTP_PORT } from '../../../constants/smtp'
 import {
 	SendApi400ErrorSchemaV1,
 	SendApi500ErrorSchemaV1,
@@ -12,7 +12,6 @@ import {
 } from '../../../libs/api/v1/schema/sendMultipleSMTP'
 import { generateMessageId, saveMailLogToR2 } from '../../../libs/mail/r2Logger'
 import { sendEmailWithSMTP } from '../../../libs/mail/smtp'
-import type { SMTPConfig } from '../../../libs/mail/smtp'
 import type { Bindings } from '../../../types/Bindings'
 
 const sendMultipleSMTPApiV1 = new OpenAPIHono<{ Bindings: Bindings }>()
