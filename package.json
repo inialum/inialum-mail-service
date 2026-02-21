@@ -19,7 +19,7 @@
 		"gen:cf-types": "wrangler types --env-interface CloudflareBindings"
 	},
 	"dependencies": {
-		"@aws-sdk/client-sesv2": "^3.684.0",
+		"@aws-sdk/client-sesv2": "^3.828.0",
 		"@hono/zod-openapi": "^0.16.4",
 		"@inialum/error-notification-service-hono-middleware": "^0.4.0",
 		"@sendgrid/mail": "^8.1.4",
