@@ -1,19 +1,20 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
 import { env } from 'hono/adapter'
 
+import { DEFAULT_SMTP_PORT } from '../../../constants/smtp'
 import {
 	SendApi400ErrorSchemaV1,
 	SendApi500ErrorSchemaV1,
 } from '../../../libs/api/v1/schema/send'
 import {
-	SendMultipleApiRequestSchemaV1,
-	SendMultipleApiResponseSchemaV1,
-} from '../../../libs/api/v1/schema/sendMultiple'
+	SendMultipleSMTPApiRequestSchemaV1,
+	SendMultipleSMTPApiResponseSchemaV1,
+} from '../../../libs/api/v1/schema/sendMultipleSMTP'
 import { generateMessageId, saveMailLogToR2 } from '../../../libs/mail/r2Logger'
-import { sendEmailWithSendGrid } from '../../../libs/mail/sendgrid'
+import { sendEmailWithSMTP } from '../../../libs/mail/smtp'
 import type { Bindings } from '../../../types/Bindings'
 
-const sendMultipleApiV1 = new OpenAPIHono<{ Bindings: Bindings }>()
+const sendMultipleSMTPApiV1 = new OpenAPIHono<{ Bindings: Bindings }>()
 
 const route = createRoute({
 	method: 'post',
@@ -23,10 +24,10 @@ const route = createRoute({
 		body: {
 			content: {
 				'application/json': {
-					schema: SendMultipleApiRequestSchemaV1,
+					schema: SendMultipleSMTPApiRequestSchemaV1,
 				},
 			},
-			description: 'Email data to send',
+			description: 'Email data to send via SMTP',
 			required: true,
 		},
 	},
@@ -34,7 +35,7 @@ const route = createRoute({
 		200: {
 			content: {
 				'application/json': {
-					schema: SendMultipleApiResponseSchemaV1,
+					schema: SendMultipleSMTPApiResponseSchemaV1,
 				},
 			},
 			description: 'Returns OK response if email is sent successfully',
@@ -45,7 +46,7 @@ const route = createRoute({
 					schema: SendApi400ErrorSchemaV1,
 				},
 			},
-			description: 'Bad request',
+			description: 'Bad request or missing SMTP configuration',
 		},
 		500: {
 			content: {
@@ -53,29 +54,56 @@ const route = createRoute({
 					schema: SendApi500ErrorSchemaV1,
 				},
 			},
-			description: 'Internal server error or external API error',
+			description: 'Internal server error or SMTP error',
 		},
 	},
 })
 
-sendMultipleApiV1.openapi(
+sendMultipleSMTPApiV1.openapi(
 	route,
 	async (c) => {
-		const { ENVIRONMENT, SENDGRID_TOKEN, MAIL_LOGS_BUCKET } = env(c)
+		const {
+			ENVIRONMENT,
+			SMTP_HOST,
+			SMTP_PORT,
+			SMTP_USER,
+			SMTP_PASS,
+			MAIL_LOGS_BUCKET,
+		} = env(c)
 		const messageId = generateMessageId()
 		const timestamp = new Date().toISOString()
 
 		const data = c.req.valid('json')
 
+		// Use environment variables for SMTP configuration
+		if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
+			return c.json(
+				{
+					message:
+						'SMTP configuration is required. Please configure SMTP_HOST, SMTP_USER, and SMTP_PASS environment variables.',
+				},
+				400,
+			)
+		}
+
+		const port = SMTP_PORT ? Number.parseInt(SMTP_PORT, 10) : DEFAULT_SMTP_PORT
+		const smtpConfig = {
+			host: SMTP_HOST,
+			port,
+			user: SMTP_USER,
+			pass: SMTP_PASS,
+			secure: port === 465, // SSL for port 465, STARTTLS for others
+		}
+
 		try {
-			await sendEmailWithSendGrid(
+			await sendEmailWithSMTP(
 				{
 					fromAddress: data.from,
 					toAddresses: data.to,
 					subject: data.subject,
 					body: data.body,
 				},
-				SENDGRID_TOKEN,
+				smtpConfig,
 			)
 
 			try {
@@ -132,4 +160,4 @@ sendMultipleApiV1.openapi(
 	},
 )
 
-export { sendMultipleApiV1 }
+export { sendMultipleSMTPApiV1 }
