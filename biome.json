@@ -8,6 +8,8 @@
 	"files": {
 		"includes": [
 			"**",
+			"!.agents",
+			"!skills-lock.json",
 			"!**/types/generated/**/*",
 			"!**/LICENSE",
 			"!**/worker-configuration.d.ts"
