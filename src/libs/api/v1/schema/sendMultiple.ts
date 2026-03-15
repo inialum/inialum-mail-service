@@ -35,12 +35,60 @@ export type SendMultipleApiRequestV1 = z.infer<
 >
 
 /**
- * Schema for response of POST /send-multiple
+ * Schema for accepted response of POST /send-multiple
  */
-export const SendMultipleApiResponseSchemaV1 = z
+export const SendMultipleAcceptedApiResponseSchemaV1 = z
 	.object({
-		status: z.string().openapi({
-			example: 'ok',
+		status: z.literal('accepted').openapi({
+			example: 'accepted',
+		}),
+		campaignId: z.string().openapi({
+			example: 'e7f4ad2b-8e0d-4e7a-a8fc-0ff6c5177310',
 		}),
 	})
-	.openapi('Response')
+	.openapi('AcceptedResponse')
+
+export const MailCampaignStatusSchemaV1 = z
+	.enum(['accepted', 'processing', 'completed', 'partial_failed', 'failed'])
+	.openapi({
+		example: 'processing',
+	})
+
+export const SendMultipleStatusApiResponseSchemaV1 = z
+	.object({
+		campaignId: z.string().openapi({
+			example: 'e7f4ad2b-8e0d-4e7a-a8fc-0ff6c5177310',
+		}),
+		status: MailCampaignStatusSchemaV1,
+		requestedRecipients: z.number().int().openapi({
+			example: 400,
+		}),
+		uniqueRecipients: z.number().int().openapi({
+			example: 398,
+		}),
+		processedRecipients: z.number().int().openapi({
+			example: 120,
+		}),
+		sentRecipients: z.number().int().openapi({
+			example: 118,
+		}),
+		failedRecipients: z.number().int().openapi({
+			example: 2,
+		}),
+		createdAt: z.string().datetime().openapi({
+			example: '2026-03-16T00:00:00.000Z',
+		}),
+		startedAt: z.string().datetime().optional().openapi({
+			example: '2026-03-16T00:00:05.000Z',
+		}),
+		completedAt: z.string().datetime().optional().openapi({
+			example: '2026-03-16T00:01:30.000Z',
+		}),
+	})
+	.openapi('CampaignStatusResponse')
+
+export const SendMultipleStatusApi404ErrorSchemaV1 = z.object({
+	message: z.string().openapi({
+		example: 'Campaign not found',
+	}),
+})
