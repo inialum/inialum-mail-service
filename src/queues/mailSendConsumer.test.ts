@@ -1,3 +1,4 @@
+import { reportQueueError } from '../libs/error/reportQueueError'
 import { saveRecipientFailureLog } from '../libs/mail/r2Logger'
 import { sendEmailWithSES } from '../libs/mail/ses'
 import type { Bindings } from '../types/Bindings'
@@ -13,6 +14,12 @@ vi.mock('../libs/mail/ses', () => {
 vi.mock('../libs/mail/r2Logger', () => {
 	return {
 		saveRecipientFailureLog: vi.fn(),
+	}
+})
+
+vi.mock('../libs/error/reportQueueError', () => {
+	return {
+		reportQueueError: vi.fn(),
 	}
 })
 
@@ -32,6 +39,7 @@ const bindings = {
 	ENVIRONMENT: 'production',
 	AWS_ACCESS_KEY_ID: 'test-access-key-id',
 	AWS_SECRET_ACCESS_KEY: 'test-secret-access-key',
+	ERROR_NOTIFICATION_TOKEN: 'test-error-token',
 	MAIL_LOGS_BUCKET: 'mock-r2-bucket',
 } as unknown as Bindings
 
@@ -59,6 +67,7 @@ describe('handleMailSendQueue', () => {
 	beforeEach(() => {
 		vi.mocked(sendEmailWithSES).mockReset()
 		vi.mocked(saveRecipientFailureLog).mockReset()
+		vi.mocked(reportQueueError).mockReset()
 	})
 
 	test('should send mail and acknowledge message', async () => {
@@ -90,6 +99,7 @@ describe('handleMailSendQueue', () => {
 		)
 		expect(message.ack).toHaveBeenCalledTimes(1)
 		expect(message.retry).not.toHaveBeenCalled()
+		expect(vi.mocked(reportQueueError)).not.toHaveBeenCalled()
 	})
 
 	test('should retry message when sending fails', async () => {
@@ -104,6 +114,7 @@ describe('handleMailSendQueue', () => {
 			delaySeconds: 30,
 		})
 		expect(vi.mocked(saveRecipientFailureLog)).not.toHaveBeenCalled()
+		expect(vi.mocked(reportQueueError)).not.toHaveBeenCalled()
 	})
 
 	test('should save failure log on final attempt', async () => {
@@ -129,6 +140,17 @@ describe('handleMailSendQueue', () => {
 		expect(message.retry).toHaveBeenCalledWith({
 			delaySeconds: 30,
 		})
+		expect(vi.mocked(reportQueueError)).toHaveBeenCalledWith(
+			expect.any(Error),
+			'test-error-token',
+			expect.objectContaining({
+				queue: 'inialum-mail-send-production',
+				reason: 'final delivery failure',
+				recipient: 'user@example.com',
+				attempts: 5,
+				willRetry: false,
+			}),
+		)
 	})
 
 	test('should ack invalid queue payload and skip processing', async () => {
@@ -145,5 +167,16 @@ describe('handleMailSendQueue', () => {
 		expect(message.ack).toHaveBeenCalledTimes(1)
 		expect(message.retry).not.toHaveBeenCalled()
 		expect(vi.mocked(sendEmailWithSES)).not.toHaveBeenCalled()
+		expect(vi.mocked(reportQueueError)).toHaveBeenCalledWith(
+			expect.any(Error),
+			'test-error-token',
+			expect.objectContaining({
+				queue: 'inialum-mail-send-production',
+				reason: 'invalid payload acknowledged',
+				messageId: message.id,
+				attempts: 1,
+				willRetry: false,
+			}),
+		)
 	})
 })
