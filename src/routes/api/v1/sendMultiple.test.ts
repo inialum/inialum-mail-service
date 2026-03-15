@@ -46,6 +46,8 @@ describe('API v1', () => {
 
 	beforeEach(() => {
 		sendBatchMock.mockReset()
+		vi.mocked(saveCampaignAcceptedLog).mockReset()
+		vi.mocked(saveMailLogToR2).mockReset()
 	})
 
 	test('POST /send-multiple (should enqueue deduplicated recipients)', async () => {
@@ -170,6 +172,108 @@ describe('API v1', () => {
 				},
 			] as ZodError['issues'],
 		})
+	})
+
+	test('POST /send-multiple (should reject when unique recipient count exceeds queue batch limit)', async () => {
+		const recipients = Array.from(
+			{
+				length: 101,
+			},
+			(_, index) => `user${index}@example.com`,
+		)
+
+		const res = await apiV1.request('/send-multiple', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				...apiBodyContent,
+				to: recipients,
+			}),
+		})
+
+		expect(res.status).toBe(400)
+		expect(await res.json()).toEqual({
+			message: 'Validation error',
+			issues: [
+				{
+					code: 'custom',
+					message:
+						'This request cannot be enqueued safely. Reduce unique recipients to 100 or fewer.',
+					path: ['to'],
+				},
+			] as ZodError['issues'],
+		})
+		expect(sendBatchMock).not.toHaveBeenCalled()
+	})
+
+	test('POST /send-multiple (should reject when queue payload exceeds batch size limit)', async () => {
+		const recipients = Array.from(
+			{
+				length: 100,
+			},
+			(_, index) => `user${index}@example.com`,
+		)
+
+		const res = await apiV1.request('/send-multiple', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				...apiBodyContent,
+				to: recipients,
+				body: {
+					text: 'A'.repeat(3_000),
+					html: `<p>${'B'.repeat(3_000)}</p>`,
+				},
+			}),
+		})
+
+		expect(res.status).toBe(400)
+		expect(await res.json()).toEqual({
+			message: 'Validation error',
+			issues: [
+				{
+					code: 'custom',
+					message:
+						'This request is too large to enqueue safely in a single batch. Reduce recipients or body size.',
+					path: ['to'],
+				},
+			] as ZodError['issues'],
+		})
+		expect(sendBatchMock).not.toHaveBeenCalled()
+	})
+
+	test('POST /send-multiple (should reject when a single queue message exceeds size limit)', async () => {
+		const res = await apiV1.request('/send-multiple', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				...apiBodyContent,
+				to: ['large@example.com'],
+				body: {
+					text: 'A'.repeat(130_000),
+				},
+			}),
+		})
+
+		expect(res.status).toBe(400)
+		expect(await res.json()).toEqual({
+			message: 'Validation error',
+			issues: [
+				{
+					code: 'custom',
+					message:
+						'Email payload is too large for Cloudflare Queues for recipient large@example.com. Reduce the subject or body size.',
+					path: ['body'],
+				},
+			] as ZodError['issues'],
+		})
+		expect(sendBatchMock).not.toHaveBeenCalled()
 	})
 
 	test('POST /send-multiple (should return 500 when enqueue fails)', async () => {

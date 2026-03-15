@@ -18,7 +18,11 @@ import type { Bindings } from '../../../types/Bindings'
 import type { MailQueueMessage } from '../../../types/MailQueueMessage'
 
 const sendMultipleApiV1 = new OpenAPIHono<{ Bindings: Bindings }>()
-const ENQUEUE_BATCH_SIZE = 100
+const MAX_QUEUE_BATCH_MESSAGES = 100
+const MAX_QUEUE_BATCH_BYTES = 256_000
+const MAX_QUEUE_MESSAGE_BYTES = 128_000
+const APPROX_QUEUE_METADATA_BYTES = 100
+const textEncoder = new TextEncoder()
 
 const dedupeRecipients = (recipients: string[]) => {
 	const seen = new Set<string>()
@@ -39,12 +43,57 @@ const dedupeRecipients = (recipients: string[]) => {
 	return deduped
 }
 
-const chunkBy = <T>(items: T[], size: number) => {
-	const chunks: T[][] = []
-	for (let i = 0; i < items.length; i += size) {
-		chunks.push(items.slice(i, i + size))
+const estimateQueueMessageBytes = (message: MailQueueMessage) =>
+	textEncoder.encode(JSON.stringify(message)).byteLength +
+	APPROX_QUEUE_METADATA_BYTES
+
+const buildQueueValidationIssues = (messages: MailQueueMessage[]) => {
+	const issues: Array<{
+		code: string
+		message: string
+		path: string[]
+	}> = []
+
+	if (messages.length > MAX_QUEUE_BATCH_MESSAGES) {
+		issues.push({
+			code: 'custom',
+			message:
+				'This request cannot be enqueued safely. Reduce unique recipients to 100 or fewer.',
+			path: ['to'],
+		})
 	}
-	return chunks
+
+	let batchBytes = 0
+	let oversizeRecipient: string | undefined
+	for (const message of messages) {
+		const messageBytes = estimateQueueMessageBytes(message)
+		if (
+			oversizeRecipient === undefined &&
+			messageBytes > MAX_QUEUE_MESSAGE_BYTES
+		) {
+			oversizeRecipient = message.to
+		}
+		batchBytes += messageBytes
+	}
+
+	if (oversizeRecipient) {
+		issues.push({
+			code: 'custom',
+			message: `Email payload is too large for Cloudflare Queues for recipient ${oversizeRecipient}. Reduce the subject or body size.`,
+			path: ['body'],
+		})
+	}
+
+	if (batchBytes > MAX_QUEUE_BATCH_BYTES) {
+		issues.push({
+			code: 'custom',
+			message:
+				'This request is too large to enqueue safely in a single batch. Reduce recipients or body size.',
+			path: ['to'],
+		})
+	}
+
+	return issues
 }
 
 const route = createRoute({
@@ -109,18 +158,25 @@ sendMultipleApiV1.openapi(
 				body: data.body,
 			}),
 		)
-		let queuedRecipients = 0
+		const queueValidationIssues = buildQueueValidationIssues(queueMessages)
+		if (queueValidationIssues.length > 0) {
+			return c.json(
+				{
+					message: 'Validation error',
+					issues: queueValidationIssues,
+				},
+				400,
+			)
+		}
 
 		try {
-			for (const chunk of chunkBy(queueMessages, ENQUEUE_BATCH_SIZE)) {
-				await MAIL_SEND_QUEUE.sendBatch(
-					chunk.map((message) => ({
-						body: message,
-						contentType: 'json',
-					})),
-				)
-				queuedRecipients += chunk.length
-			}
+			await MAIL_SEND_QUEUE.sendBatch(
+				queueMessages.map((message) => ({
+					body: message,
+					contentType: 'json',
+				})),
+			)
+			const queuedRecipients = queueMessages.length
 
 			try {
 				await saveCampaignAcceptedLog(MAIL_LOGS_BUCKET, {
@@ -153,9 +209,7 @@ sendMultipleApiV1.openapi(
 					subject: data.subject,
 					status: 'error',
 					messageId: campaignId,
-					error:
-						`Failed to enqueue campaign. queuedRecipients: ${queuedRecipients}\n` +
-						(error instanceof Error ? error.message : String(error)),
+					error: error instanceof Error ? error.message : String(error),
 				})
 			} catch (logError) {
 				console.error('Failed to save error log to R2:', logError)
