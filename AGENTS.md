@@ -27,7 +27,7 @@ This file provides guidance for coding agents working in this repository.
 ### Email Delivery Flow
 
 - `POST /api/v1/send`: send a single email via AWS SES
-- `POST /api/v1/send-multiple`: enqueue one message per recipient to Cloudflare Queues
+- `POST /api/v1/send-multiple`: accept an async campaign and enqueue up to 100 recipients per queue message
 - Queue consumer: sends emails via AWS SES with controlled pace (`~8/sec`)
 - Retry policy: queue-level retries with DLQ fallback
 

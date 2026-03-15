@@ -378,6 +378,24 @@ describe('handleMailSendQueue', () => {
 		)
 	})
 
+	test('should ack without sending when campaign is already terminal', async () => {
+		vi.mocked(getCampaignStatus).mockResolvedValueOnce({
+			...baseStatus,
+			status: 'failed',
+			completedAt: '2026-03-05T10:05:00.000Z',
+		})
+		const message = createMessage(baseMessageBody, 1)
+		const batch = createBatch([message])
+
+		await handleMailSendQueue(batch, bindings, 0)
+
+		expect(message.ack).toHaveBeenCalledTimes(1)
+		expect(message.retry).not.toHaveBeenCalled()
+		expect(vi.mocked(sendEmailWithSES)).not.toHaveBeenCalled()
+		expect(vi.mocked(updateCampaignStatus)).not.toHaveBeenCalled()
+		expect(vi.mocked(reportQueueError)).not.toHaveBeenCalled()
+	})
+
 	test('should mark campaign failed and ack on final processing error', async () => {
 		vi.mocked(updateCampaignStatus).mockRejectedValueOnce(
 			new Error('campaign status update failed'),

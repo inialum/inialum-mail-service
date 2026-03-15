@@ -15,6 +15,7 @@ import type { MailCampaignChunkProgress } from '../types/MailCampaign'
 import type { MailQueueMessage } from '../types/MailQueueMessage'
 
 const SEND_INTERVAL_MS = 125
+// Keep in sync with wrangler.json queues.*.consumers[].max_retries.
 const FINAL_ATTEMPT_COUNT = 5
 const RETRY_DELAY_SECONDS = 30
 
@@ -34,6 +35,9 @@ const logQueueEvent = (event: string, data: Record<string, unknown>) => {
 		}),
 	)
 }
+
+const isTerminalCampaignStatus = (status: string) =>
+	status === 'completed' || status === 'partial_failed' || status === 'failed'
 
 const isMailQueueMessage = (value: unknown): value is MailQueueMessage => {
 	if (!value || typeof value !== 'object') {
@@ -265,6 +269,11 @@ export const handleMailSendQueue = async (
 						willRetry: false,
 					},
 				)
+				message.ack()
+				continue
+			}
+
+			if (isTerminalCampaignStatus(status.status)) {
 				message.ack()
 				continue
 			}
