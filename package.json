@@ -47,6 +47,7 @@
 		"onlyBuiltDependencies": [
 			"@biomejs/biome",
 			"esbuild",
+			"sharp",
 			"workerd"
 		]
 	}
