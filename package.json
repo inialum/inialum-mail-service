@@ -16,7 +16,8 @@
 		"test:ci": "pnpm run test:coverage",
 		"test:coverage": "vitest run --coverage",
 		"typecheck": "tsc --noEmit",
-		"gen:cf-types": "wrangler types --env-interface CloudflareBindings"
+		"gen:cf-types": "wrangler types --env-interface CloudflareBindings",
+		"wrangler": "wrangler"
 	},
 	"dependencies": {
 		"@aws-sdk/client-sesv2": "^3.684.0",
