@@ -154,6 +154,14 @@ describe('handleMailSendQueue', () => {
 		vi.mocked(updateCampaignStatus).mockResolvedValue(baseStatus)
 	})
 
+	const getStatusUpdaterResult = (callIndex: number, current = baseStatus) => {
+		const updater = vi.mocked(updateCampaignStatus).mock.calls[callIndex]?.[3]
+		expect(updater).toBeTypeOf('function')
+		return (updater as (status: typeof baseStatus) => typeof baseStatus)(
+			current,
+		)
+	}
+
 	test('should send mail and acknowledge message', async () => {
 		vi.mocked(sendEmailWithSES).mockResolvedValueOnce({
 			$metadata: {
@@ -192,6 +200,42 @@ describe('handleMailSendQueue', () => {
 		expect(message.retry).not.toHaveBeenCalled()
 		expect(queueSendMock).not.toHaveBeenCalled()
 		expect(vi.mocked(reportQueueError)).not.toHaveBeenCalled()
+	})
+
+	test('should fail campaign without retrying when bookkeeping fails after send', async () => {
+		vi.mocked(sendEmailWithSES).mockResolvedValueOnce({
+			$metadata: {
+				httpStatusCode: 200,
+			},
+		})
+		vi.mocked(saveCampaignChunkProgress).mockRejectedValueOnce(
+			new Error('chunk progress save failed'),
+		)
+		const message = createMessage(baseMessageBody, 1)
+		const batch = createBatch([message])
+
+		await handleMailSendQueue(batch, bindings, 0)
+
+		expect(message.retry).not.toHaveBeenCalled()
+		expect(message.ack).toHaveBeenCalledTimes(1)
+		expect(queueSendMock).not.toHaveBeenCalled()
+		expect(vi.mocked(updateCampaignStatus)).toHaveBeenCalledTimes(2)
+		expect(getStatusUpdaterResult(1)).toEqual(
+			expect.objectContaining({
+				status: 'failed',
+			}),
+		)
+		expect(vi.mocked(reportQueueError)).toHaveBeenCalledWith(
+			expect.any(Error),
+			'test-error-token',
+			expect.objectContaining({
+				queue: 'inialum-mail-send-production',
+				reason: 'campaign bookkeeping failed after send',
+				campaignId: 'campaign-1',
+				recipient: 'user@example.com',
+				willRetry: false,
+			}),
+		)
 	})
 
 	test('should enqueue a continuation message when sending fails before final attempt', async () => {
@@ -316,6 +360,12 @@ describe('handleMailSendQueue', () => {
 
 		expect(message.ack).toHaveBeenCalledTimes(1)
 		expect(message.retry).not.toHaveBeenCalled()
+		expect(vi.mocked(updateCampaignStatus)).toHaveBeenCalledTimes(1)
+		expect(getStatusUpdaterResult(0)).toEqual(
+			expect.objectContaining({
+				status: 'failed',
+			}),
+		)
 		expect(vi.mocked(reportQueueError)).toHaveBeenCalledWith(
 			expect.any(Error),
 			'test-error-token',
@@ -323,6 +373,36 @@ describe('handleMailSendQueue', () => {
 				queue: 'inialum-mail-send-production',
 				reason: 'campaign data missing',
 				campaignId: 'campaign-1',
+				willRetry: false,
+			}),
+		)
+	})
+
+	test('should mark campaign failed and ack on final processing error', async () => {
+		vi.mocked(updateCampaignStatus).mockRejectedValueOnce(
+			new Error('campaign status update failed'),
+		)
+		const message = createMessage(baseMessageBody, 5)
+		const batch = createBatch([message])
+
+		await handleMailSendQueue(batch, bindings, 0)
+
+		expect(message.retry).not.toHaveBeenCalled()
+		expect(message.ack).toHaveBeenCalledTimes(1)
+		expect(vi.mocked(updateCampaignStatus)).toHaveBeenCalledTimes(2)
+		expect(getStatusUpdaterResult(1)).toEqual(
+			expect.objectContaining({
+				status: 'failed',
+			}),
+		)
+		expect(vi.mocked(reportQueueError)).toHaveBeenCalledWith(
+			expect.any(Error),
+			'test-error-token',
+			expect.objectContaining({
+				queue: 'inialum-mail-send-production',
+				reason: 'campaign processing failed',
+				campaignId: 'campaign-1',
+				attempts: 5,
 				willRetry: false,
 			}),
 		)

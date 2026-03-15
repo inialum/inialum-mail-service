@@ -130,6 +130,38 @@ const markCampaignProcessing = async (
 	)
 }
 
+const markCampaignFailed = async (
+	bindings: Bindings,
+	campaignId: string,
+	startedAt: string,
+) => {
+	try {
+		await updateCampaignStatus(
+			bindings.MAIL_LOGS_BUCKET,
+			bindings.ENVIRONMENT,
+			campaignId,
+			(current) => {
+				if (
+					current.status === 'completed' ||
+					current.status === 'partial_failed' ||
+					current.status === 'failed'
+				) {
+					return current
+				}
+
+				return {
+					...current,
+					status: 'failed',
+					startedAt: current.startedAt ?? startedAt,
+					completedAt: new Date().toISOString(),
+				}
+			},
+		)
+	} catch (error) {
+		console.error('Failed to update campaign status to failed:', error)
+	}
+}
+
 const requeueChunkMessage = async (
 	bindings: Bindings,
 	messageBody: MailQueueMessage,
@@ -217,6 +249,9 @@ export const handleMailSendQueue = async (
 
 			if (!manifest || !progress || !status) {
 				const missingCampaignDataError = new Error('Campaign data not found')
+				if (status) {
+					await markCampaignFailed(bindings, message.body.campaignId, startedAt)
+				}
 				await reportQueueError(
 					missingCampaignDataError,
 					bindings.ERROR_NOTIFICATION_TOKEN,
@@ -252,6 +287,7 @@ export const handleMailSendQueue = async (
 				recipientOffset += 1
 			) {
 				const recipient = message.body.recipients[recipientOffset]
+				let didSendRecipient = false
 
 				try {
 					await sendEmailWithSES(
@@ -268,23 +304,8 @@ export const handleMailSendQueue = async (
 						endpoint,
 					)
 
+					didSendRecipient = true
 					summary.succeeded += 1
-					await saveCampaignChunkProgress(
-						bindings.MAIL_LOGS_BUCKET,
-						buildNextChunkProgress(
-							progress,
-							recipientOffset + 1,
-							0,
-							recipientOffset + 1 >= message.body.recipients.length,
-							new Date().toISOString(),
-						),
-					)
-					await updateDeliveryStatus(
-						bindings,
-						message.body.campaignId,
-						startedAt,
-						'sent',
-					)
 				} catch (error) {
 					const resolvedError = toError(error)
 					const currentRecipientAttempts =
@@ -387,6 +408,51 @@ export const handleMailSendQueue = async (
 					)
 				}
 
+				if (!didSendRecipient) {
+					if (sendIntervalMs > 0) {
+						await sleep(sendIntervalMs)
+					}
+					continue
+				}
+
+				try {
+					await saveCampaignChunkProgress(
+						bindings.MAIL_LOGS_BUCKET,
+						buildNextChunkProgress(
+							progress,
+							recipientOffset + 1,
+							0,
+							recipientOffset + 1 >= message.body.recipients.length,
+							new Date().toISOString(),
+						),
+					)
+					await updateDeliveryStatus(
+						bindings,
+						message.body.campaignId,
+						startedAt,
+						'sent',
+					)
+				} catch (error) {
+					await markCampaignFailed(bindings, message.body.campaignId, startedAt)
+					await reportQueueError(
+						toError(error),
+						bindings.ERROR_NOTIFICATION_TOKEN,
+						{
+							queue: batch.queue,
+							environment: bindings.ENVIRONMENT,
+							reason: 'campaign bookkeeping failed after send',
+							messageId: message.id,
+							campaignId: message.body.campaignId,
+							recipient,
+							attempts: message.attempts,
+							willRetry: false,
+						},
+					)
+					message.ack()
+					shouldContinueWithNextQueueMessage = true
+					break
+				}
+
 				if (sendIntervalMs > 0) {
 					await sleep(sendIntervalMs)
 				}
@@ -398,22 +464,32 @@ export const handleMailSendQueue = async (
 
 			message.ack()
 		} catch (error) {
+			const willRetry = message.attempts < FINAL_ATTEMPT_COUNT
+			if (!willRetry) {
+				await markCampaignFailed(bindings, message.body.campaignId, startedAt)
+			}
 			await reportQueueError(
 				toError(error),
 				bindings.ERROR_NOTIFICATION_TOKEN,
 				{
 					queue: batch.queue,
 					environment: bindings.ENVIRONMENT,
-					reason: 'campaign processing retry scheduled',
+					reason: willRetry
+						? 'campaign processing retry scheduled'
+						: 'campaign processing failed',
 					messageId: message.id,
 					campaignId: message.body.campaignId,
 					attempts: message.attempts,
-					willRetry: true,
+					willRetry,
 				},
 			)
-			message.retry({
-				delaySeconds: RETRY_DELAY_SECONDS,
-			})
+			if (willRetry) {
+				message.retry({
+					delaySeconds: RETRY_DELAY_SECONDS,
+				})
+			} else {
+				message.ack()
+			}
 		}
 	}
 
