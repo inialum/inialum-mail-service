@@ -17,6 +17,9 @@ importers:
       '@inialum/error-notification-service-hono-middleware':
         specifier: ^0.4.0
         version: 0.4.0(hono@4.6.8)
+      '@inialum/error-notification-service-javascript-sdk':
+        specifier: ^0.4.0
+        version: 0.4.0
       hono:
         specifier: ^4.6.8
         version: 4.6.8
