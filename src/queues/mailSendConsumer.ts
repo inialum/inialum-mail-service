@@ -136,7 +136,9 @@ export const handleMailSendQueue = async (
 			const resolvedError = toError(error)
 			const willRetry = message.attempts < FINAL_ATTEMPT_COUNT
 
-			summary.retried += 1
+			if (willRetry) {
+				summary.retried += 1
+			}
 			logQueueEvent('mail_send_queue.delivery_failed', {
 				queue: batch.queue,
 				environment: bindings.ENVIRONMENT,
@@ -181,9 +183,13 @@ export const handleMailSendQueue = async (
 				)
 			}
 
-			message.retry({
-				delaySeconds: RETRY_DELAY_SECONDS,
-			})
+			if (willRetry) {
+				message.retry({
+					delaySeconds: RETRY_DELAY_SECONDS,
+				})
+			} else {
+				message.ack()
+			}
 		}
 
 		if (sendIntervalMs > 0) {

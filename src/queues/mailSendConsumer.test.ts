@@ -1,3 +1,4 @@
+import { LOCAL_SES_API_ENDPOINT } from '../constants/mail'
 import { reportQueueError } from '../libs/error/reportQueueError'
 import { saveRecipientFailureLog } from '../libs/mail/r2Logger'
 import { sendEmailWithSES } from '../libs/mail/ses'
@@ -137,9 +138,8 @@ describe('handleMailSendQueue', () => {
 				error: 'SES final error',
 			}),
 		)
-		expect(message.retry).toHaveBeenCalledWith({
-			delaySeconds: 30,
-		})
+		expect(message.retry).not.toHaveBeenCalled()
+		expect(message.ack).toHaveBeenCalledTimes(1)
 		expect(vi.mocked(reportQueueError)).toHaveBeenCalledWith(
 			expect.any(Error),
 			'test-error-token',
@@ -150,6 +150,28 @@ describe('handleMailSendQueue', () => {
 				attempts: 5,
 				willRetry: false,
 			}),
+		)
+	})
+
+	test('should use local SES endpoint outside production and staging', async () => {
+		vi.mocked(sendEmailWithSES).mockResolvedValueOnce({
+			$metadata: {
+				httpStatusCode: 200,
+			},
+		})
+		const message = createMessage(baseMessageBody)
+		const batch = createBatch([message])
+		const localBindings = {
+			...bindings,
+			ENVIRONMENT: 'local',
+		} as Bindings
+
+		await handleMailSendQueue(batch, localBindings, 0)
+
+		expect(vi.mocked(sendEmailWithSES)).toHaveBeenCalledWith(
+			expect.any(Object),
+			expect.any(Object),
+			LOCAL_SES_API_ENDPOINT,
 		)
 	})
 
