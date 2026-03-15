@@ -16,13 +16,14 @@
 		"test:ci": "pnpm run test:coverage",
 		"test:coverage": "vitest run --coverage",
 		"typecheck": "tsc --noEmit",
-		"gen:cf-types": "wrangler types --env-interface CloudflareBindings"
+		"gen:cf-types": "wrangler types --env-interface CloudflareBindings",
+		"wrangler": "wrangler"
 	},
 	"dependencies": {
 		"@aws-sdk/client-sesv2": "^3.684.0",
 		"@hono/zod-openapi": "^0.16.4",
 		"@inialum/error-notification-service-hono-middleware": "^0.4.0",
-		"@sendgrid/mail": "^8.1.4",
+		"@inialum/error-notification-service-javascript-sdk": "^0.4.0",
 		"hono": "^4.6.8",
 		"libmime": "^5.3.6",
 		"zod": "^3.23.8"
@@ -40,13 +41,14 @@
 		"typescript": "^5.8.2",
 		"vitest": "^4.1.0",
 		"vitest-environment-miniflare": "^2.14.4",
-		"wrangler": "^4.19.1"
+		"wrangler": "^4.73.0"
 	},
 	"packageManager": "pnpm@10.6.1+sha512.40ee09af407fa9fbb5fbfb8e1cb40fbb74c0af0c3e10e9224d7b53c7658528615b2c92450e74cfad91e3a2dcafe3ce4050d80bda71d757756d2ce2b66213e9a3",
 	"pnpm": {
 		"onlyBuiltDependencies": [
 			"@biomejs/biome",
 			"esbuild",
+			"sharp",
 			"workerd"
 		]
 	}

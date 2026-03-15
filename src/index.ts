@@ -1,25 +1,22 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
-import {
-	type EnvironmentType,
-	notifyError,
-} from '@inialum/error-notification-service-hono-middleware'
+import { notifyError } from '@inialum/error-notification-service-hono-middleware'
 import { env } from 'hono/adapter'
 import { cors } from 'hono/cors'
 import { jwt } from 'hono/jwt'
 import { secureHeaders } from 'hono/secure-headers'
 
 import { API_ENDPOINT, ORIGINS } from './constants/config'
+import { handleMailSendQueue } from './queues/mailSendConsumer'
 import { api } from './routes/api'
+import type { Bindings } from './types/Bindings'
+import type { MailQueueMessage } from './types/MailQueueMessage'
 
-const app = new OpenAPIHono()
+const app = new OpenAPIHono<{ Bindings: Bindings }>()
 
 app.use('*', secureHeaders())
 
 app.use('*', async (c, next) => {
-	const { ERROR_NOTIFICATION_TOKEN } = env<{
-		ERROR_NOTIFICATION_TOKEN: string
-	}>(c)
-	const { ENVIRONMENT } = env<{ ENVIRONMENT: EnvironmentType }>(c)
+	const { ENVIRONMENT, ERROR_NOTIFICATION_TOKEN } = env(c)
 	const handleError = notifyError({
 		token: ERROR_NOTIFICATION_TOKEN,
 		serviceName: 'inialum-mail-service',
@@ -36,7 +33,7 @@ app.use('*', async (c, next) => {
 })
 
 app.use('/api/*', async (c, next) => {
-	const { ENVIRONMENT } = env<{ ENVIRONMENT: EnvironmentType }>(c)
+	const { ENVIRONMENT } = env(c)
 	const originCheck = cors({
 		origin: ENVIRONMENT === 'production' ? ORIGINS : '*',
 	})
@@ -45,7 +42,7 @@ app.use('/api/*', async (c, next) => {
 })
 
 app.use('/api/*', async (c, next) => {
-	const { TOKEN_SECRET } = env<{ TOKEN_SECRET: string }>(c)
+	const { TOKEN_SECRET } = env(c)
 	const auth = jwt({
 		secret: TOKEN_SECRET,
 	})
@@ -75,4 +72,9 @@ app.openAPIRegistry.registerComponent('securitySchemes', 'bearerAuth', {
 	description: 'JWT Authentication',
 })
 
-export default app
+const handler: ExportedHandler<Bindings, MailQueueMessage> = {
+	fetch: app.fetch,
+	queue: (batch, bindings) => handleMailSendQueue(batch, bindings),
+}
+
+export default handler

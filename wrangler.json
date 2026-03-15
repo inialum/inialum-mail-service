@@ -1,7 +1,7 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "inialum-mail-service",
-	"compatibility_date": "2024-12-30",
+	"compatibility_date": "2026-02-24",
 	"compatibility_flags": ["nodejs_compat"],
 	"workers_dev": false,
 	"vars": {
@@ -17,12 +17,56 @@
 			"bucket_name": "inialum-mail-service-logs"
 		}
 	],
+	"queues": {
+		"producers": [
+			{
+				"binding": "MAIL_SEND_QUEUE",
+				"queue": "inialum-mail-send-production"
+			}
+		],
+		"consumers": [
+			{
+				"queue": "inialum-mail-send-production",
+				"max_batch_size": 10,
+				"max_batch_timeout": 2,
+				"max_retries": 5,
+				"retry_delay": 30,
+				"dead_letter_queue": "inialum-mail-send-production-dlq",
+				"max_concurrency": 1
+			}
+		]
+	},
 	"env": {
 		"staging": {
 			"name": "inialum-mail-service-staging",
 			"workers_dev": true,
 			"vars": {
 				"ENVIRONMENT": "staging"
+			},
+			"r2_buckets": [
+				{
+					"binding": "MAIL_LOGS_BUCKET",
+					"bucket_name": "inialum-mail-service-logs"
+				}
+			],
+			"queues": {
+				"producers": [
+					{
+						"binding": "MAIL_SEND_QUEUE",
+						"queue": "inialum-mail-send-staging"
+					}
+				],
+				"consumers": [
+					{
+						"queue": "inialum-mail-send-staging",
+						"max_batch_size": 10,
+						"max_batch_timeout": 2,
+						"max_retries": 5,
+						"retry_delay": 30,
+						"dead_letter_queue": "inialum-mail-send-staging-dlq",
+						"max_concurrency": 1
+					}
+				]
 			}
 		}
 	}
