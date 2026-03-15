@@ -14,6 +14,8 @@ export const SendMultipleApiRequestSchemaV1 = z
 			.string()
 			.email('Invalid email address')
 			.array()
+			.min(1, 'At least one recipient is required')
+			.max(400, 'Maximum 400 recipients are allowed')
 			.openapi({
 				example: ['to@example.com'],
 			}),
