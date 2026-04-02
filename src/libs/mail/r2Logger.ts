@@ -21,6 +21,13 @@ const putJson = async (bucket: R2Bucket, key: string, data: unknown) => {
 const getDateStr = (timestamp: string) =>
 	new Date(timestamp).toISOString().split('T')[0]
 
+const getTimeStr = (timestamp: string) =>
+	new Date(timestamp)
+		.toISOString()
+		.split('T')[1]
+		.split('.')[0]
+		.replace(/:/g, '-')
+
 const sanitizeKeyPart = (input: string) =>
 	input.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 128)
 
@@ -39,15 +46,9 @@ export async function saveMailLogToR2(
 	bucket: R2Bucket,
 	logData: MailLogData,
 ): Promise<void> {
-	const date = new Date(logData.timestamp)
-	const dateStr = date.toISOString().split('T')[0]
-	const timeStr = date
-		.toISOString()
-		.split('T')[1]
-		.split('.')[0]
-		.replace(/:/g, '-')
-
-	const key = `${logData.environment}/multiple/${dateStr}/${timeStr}-${logData.messageId}.json`
+	const dateStr = getDateStr(logData.timestamp)
+	const timeStr = getTimeStr(logData.timestamp)
+	const key = `${logData.environment}/logs/mail/${logData.status}/${dateStr}/${timeStr}-${logData.messageId}.json`
 
 	await putJson(bucket, key, logData)
 }
@@ -68,7 +69,7 @@ export async function saveCampaignAcceptedLog(
 	logData: CampaignAcceptedLogData,
 ): Promise<void> {
 	const dateStr = getDateStr(logData.timestamp)
-	const key = `${logData.environment}/multiple/campaigns/${dateStr}/${logData.campaignId}.json`
+	const key = `${logData.environment}/logs/campaigns/accepted/${dateStr}/${logData.campaignId}.json`
 	await putJson(bucket, key, logData)
 }
 
@@ -89,7 +90,7 @@ export async function saveRecipientFailureLog(
 ): Promise<void> {
 	const dateStr = getDateStr(logData.timestamp)
 	const recipient = sanitizeKeyPart(logData.to)
-	const key = `${logData.environment}/multiple/failures/${dateStr}/${logData.campaignId}-${recipient}-attempt${logData.attempts}.json`
+	const key = `${logData.environment}/logs/campaigns/failures/${dateStr}/${logData.campaignId}-${recipient}-attempt${logData.attempts}.json`
 	await putJson(bucket, key, logData)
 }
 
