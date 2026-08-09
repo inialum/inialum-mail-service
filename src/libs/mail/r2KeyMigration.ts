@@ -263,7 +263,7 @@ export const migrateLegacyObjectKeys = async (
 			}
 
 			const targetObject = await bucket.head(plan.targetKey)
-			if (targetObject && !overwrite) {
+			if (targetObject && !overwrite && !deleteSource) {
 				result.skipped += 1
 				result.entries.push({
 					...plan,
@@ -276,6 +276,33 @@ export const migrateLegacyObjectKeys = async (
 			const sourceObject =
 				plannedSourceObject ?? (await readLegacyObject(bucket, object.key))
 			const payload = sourceText ?? (await sourceObject.text())
+
+			if (targetObject && !overwrite && deleteSource) {
+				const existingTarget = await bucket.get(plan.targetKey)
+				if (!existingTarget) {
+					throw new Error(`Target object disappeared: ${plan.targetKey}`)
+				}
+				const existingPayload = await existingTarget.text()
+				if (existingPayload !== payload) {
+					result.errors += 1
+					result.entries.push({
+						...plan,
+						action: 'error',
+						message:
+							'Target already exists but does not match the legacy object',
+					})
+					continue
+				}
+
+				await bucket.delete(plan.sourceKey)
+				result.deleted += 1
+				result.entries.push({
+					...plan,
+					action: 'migrated',
+					message: 'Target already exists and matches; deleted the legacy key',
+				})
+				continue
+			}
 
 			await bucket.put(plan.targetKey, payload, {
 				httpMetadata: sourceObject.httpMetadata,

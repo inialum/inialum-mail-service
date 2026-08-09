@@ -7,25 +7,20 @@ import type {
 
 const CAMPAIGN_STATE_ROOT = 'state/campaigns'
 
-const campaignBaseKey = (
-	environment: string,
-	campaignId: string,
-	root: string = CAMPAIGN_STATE_ROOT,
-) => `${environment}/${root}/${campaignId}`
+const campaignBaseKey = (environment: string, campaignId: string) =>
+	`${environment}/${CAMPAIGN_STATE_ROOT}/${campaignId}`
 
-const manifestKey = (environment: string, campaignId: string, root?: string) =>
-	`${campaignBaseKey(environment, campaignId, root)}/manifest.json`
+const manifestKey = (environment: string, campaignId: string) =>
+	`${campaignBaseKey(environment, campaignId)}/manifest.json`
 
-const statusKey = (environment: string, campaignId: string, root?: string) =>
-	`${campaignBaseKey(environment, campaignId, root)}/status.json`
+const statusKey = (environment: string, campaignId: string) =>
+	`${campaignBaseKey(environment, campaignId)}/status.json`
 
 const chunkProgressKey = (
 	environment: string,
 	campaignId: string,
 	chunkIndex: number,
-	root?: string,
-) =>
-	`${campaignBaseKey(environment, campaignId, root)}/chunks/${chunkIndex}.json`
+) => `${campaignBaseKey(environment, campaignId)}/chunks/${chunkIndex}.json`
 
 const putJson = async (bucket: R2Bucket, key: string, data: unknown) => {
 	await bucket.put(key, JSON.stringify(data, null, 2), {

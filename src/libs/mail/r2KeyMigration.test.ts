@@ -217,5 +217,97 @@ describe('r2KeyMigration', () => {
 
 		expect(result.skipped).toBe(1)
 		expect(bucket.put).not.toHaveBeenCalled()
+		expect(bucket.get).not.toHaveBeenCalled()
+		expect(bucket.delete).not.toHaveBeenCalled()
+	})
+
+	test('should delete a matching legacy key when the target already exists', async () => {
+		const bucket = createBucket()
+		const payload = JSON.stringify({
+			campaignId: 'campaign-1',
+			status: 'processing',
+		})
+		bucket.list.mockResolvedValue({
+			objects: [
+				{
+					key: 'staging/multiple/campaigns/campaign-1/status.json',
+				},
+			] as R2Object[],
+			delimitedPrefixes: [],
+			truncated: false,
+		})
+		bucket.head.mockResolvedValue({
+			key: 'staging/state/campaigns/campaign-1/status.json',
+		} as R2Object)
+		bucket.get.mockImplementation(async (key: string) => ({
+			text: vi.fn(async () => payload),
+			httpMetadata: {
+				contentType: 'application/json',
+			},
+			customMetadata: {
+				source: key.startsWith('staging/multiple/') ? 'legacy' : 'new',
+			},
+		}))
+
+		const result = await migrateLegacyObjectKeys(
+			bucket as unknown as R2Bucket,
+			'staging',
+			{
+				apply: true,
+				deleteSource: true,
+			},
+		)
+
+		expect(result.deleted).toBe(1)
+		expect(result.migrated).toBe(0)
+		expect(result.errors).toBe(0)
+		expect(bucket.put).not.toHaveBeenCalled()
+		expect(bucket.delete).toHaveBeenCalledWith(
+			'staging/multiple/campaigns/campaign-1/status.json',
+		)
+		expect(result.entries[0]).toMatchObject({
+			action: 'migrated',
+			message: 'Target already exists and matches; deleted the legacy key',
+		})
+	})
+
+	test('should error when an existing target does not match the legacy object', async () => {
+		const bucket = createBucket()
+		bucket.list.mockResolvedValue({
+			objects: [
+				{
+					key: 'staging/multiple/campaigns/campaign-1/status.json',
+				},
+			] as R2Object[],
+			delimitedPrefixes: [],
+			truncated: false,
+		})
+		bucket.head.mockResolvedValue({
+			key: 'staging/state/campaigns/campaign-1/status.json',
+		} as R2Object)
+		bucket.get.mockImplementation(async (key: string) => ({
+			text: vi.fn(async () =>
+				key.startsWith('staging/multiple/')
+					? JSON.stringify({ campaignId: 'campaign-1', status: 'processing' })
+					: JSON.stringify({ campaignId: 'campaign-1', status: 'completed' }),
+			),
+		}))
+
+		const result = await migrateLegacyObjectKeys(
+			bucket as unknown as R2Bucket,
+			'staging',
+			{
+				apply: true,
+				deleteSource: true,
+			},
+		)
+
+		expect(result.errors).toBe(1)
+		expect(result.deleted).toBe(0)
+		expect(bucket.delete).not.toHaveBeenCalled()
+		expect(result.entries[0]).toMatchObject({
+			action: 'error',
+			message: 'Target already exists but does not match the legacy object',
+		})
 	})
 })

@@ -11,20 +11,10 @@ import {
 } from '@aws-sdk/client-s3'
 
 import { migrateLegacyObjectKeys } from '../src/libs/mail/r2KeyMigration'
-
-type MigrationCliOptions = {
-	environment: string
-	accountId: string
-	accessKeyId: string
-	secretAccessKey: string
-	bucketName: string
-	apply: boolean
-	deleteSource: boolean
-	overwrite: boolean
-	limit: number
-	cursor?: string
-	jurisdiction?: string
-}
+import {
+	type MigrationCliOptions,
+	parseMigrationCliArgs,
+} from '../src/libs/mail/r2KeyMigrationCli'
 
 type WranglerConfig = {
 	r2_buckets?: Array<{
@@ -53,80 +43,10 @@ Options:
   --apply                   Copy objects to the new key structure.
   --delete-source           Delete legacy keys after a successful copy. Requires --apply.
   --overwrite               Overwrite existing target keys.
-  --limit <number>          Process up to this many legacy objects. Defaults to 100.
+  --limit <integer>         Process up to this many legacy objects. Defaults to 100.
   --cursor <cursor>         Continue from a previous cursor.
   --help                    Show this message.
 `
-
-const parseArgs = (argv: string[]): MigrationCliOptions | null => {
-	const args = [...argv]
-	const flags = new Map<string, string | boolean>()
-
-	while (args.length > 0) {
-		const arg = args.shift()
-		if (!arg) {
-			continue
-		}
-
-		if (arg === '--help') {
-			return null
-		}
-
-		if (
-			arg === '--apply' ||
-			arg === '--delete-source' ||
-			arg === '--overwrite'
-		) {
-			flags.set(arg, true)
-			continue
-		}
-
-		const value = args.shift()
-		if (!value) {
-			throw new Error(`Missing value for ${arg}`)
-		}
-		flags.set(arg, value)
-	}
-
-	const environment =
-		(flags.get('--env') as string | undefined) ??
-		process.env.ENVIRONMENT ??
-		'production'
-	const apply = Boolean(flags.get('--apply'))
-	const deleteSource = Boolean(flags.get('--delete-source'))
-	if (deleteSource && !apply) {
-		throw new Error('--delete-source requires --apply')
-	}
-
-	const limitRaw = (flags.get('--limit') as string | undefined) ?? '100'
-	const limit = Number(limitRaw)
-	if (!Number.isFinite(limit) || limit <= 0) {
-		throw new Error('--limit must be a positive number')
-	}
-
-	return {
-		environment,
-		accountId:
-			(flags.get('--account-id') as string | undefined) ??
-			process.env.CLOUDFLARE_ACCOUNT_ID ??
-			'',
-		accessKeyId:
-			(flags.get('--access-key-id') as string | undefined) ??
-			process.env.R2_ACCESS_KEY_ID ??
-			'',
-		secretAccessKey:
-			(flags.get('--secret-access-key') as string | undefined) ??
-			process.env.R2_SECRET_ACCESS_KEY ??
-			'',
-		bucketName: (flags.get('--bucket') as string | undefined) ?? '',
-		apply,
-		deleteSource,
-		overwrite: Boolean(flags.get('--overwrite')),
-		limit: Math.min(limit, 1000),
-		cursor: flags.get('--cursor') as string | undefined,
-		jurisdiction: flags.get('--jurisdiction') as string | undefined,
-	}
-}
 
 const readWranglerBucketName = (environment: string) => {
 	const configText = readFileSync(
@@ -343,7 +263,7 @@ const createBucketAdapter = (
 })
 
 const main = async () => {
-	const options = parseArgs(process.argv.slice(2))
+	const options = parseMigrationCliArgs(process.argv.slice(2))
 	if (!options) {
 		console.log(HELP_TEXT)
 		return
@@ -385,6 +305,10 @@ const main = async () => {
 			2,
 		),
 	)
+
+	if (result.errors > 0) {
+		process.exitCode = 1
+	}
 }
 
 void main().catch((error) => {
