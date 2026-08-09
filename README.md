@@ -49,8 +49,7 @@ pnpm run test:coverage
 
 ### OpenAPI Specification
 
-OpenAPI Specification (OAS) is a standard, language-agnostic interface to RESTful APIs. This service uses OAS to describe its API and it is powered by [Zod OpenAPI Hono
-](https://github.com/honojs/middleware/tree/main/packages/zod-openapi). The service hosts the OAS file on `/schema/v1` endpoint.
+OpenAPI Specification (OAS) is a standard, language-agnostic interface to RESTful APIs. This service uses OAS to describe its API and it is powered by [Zod OpenAPI Hono](https://github.com/honojs/middleware/tree/main/packages/zod-openapi). The service hosts the OAS file on `/schema/v1` endpoint.
 
 ### Tips
 
