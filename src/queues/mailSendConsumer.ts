@@ -1,6 +1,7 @@
 import {
 	LOCAL_SES_API_ENDPOINT,
 	QUEUE_CONSUMER_MAX_BATCH_SIZE,
+	QUEUE_CONSUMER_MAX_RETRIES,
 	QUEUE_CONSUMER_SES_MAX_ATTEMPTS,
 } from '../constants/mail'
 import { reportQueueError } from '../libs/error/reportQueueError'
@@ -20,8 +21,7 @@ import type { MailCampaignChunkProgress } from '../types/MailCampaign'
 import type { MailQueueMessage } from '../types/MailQueueMessage'
 
 const SEND_INTERVAL_MS = 125
-// Keep in sync with wrangler.json queues.*.consumers[].max_retries.
-const FINAL_ATTEMPT_COUNT = 5
+const MAX_RECIPIENT_ATTEMPTS = 5
 const RETRY_DELAY_SECONDS = 30
 
 const sleep = (ms: number) =>
@@ -181,12 +181,13 @@ const requeueChunkMessage = async (
 	})
 }
 
-const requeueWithoutConsumingAttempts = async ({
+const retryWithoutConsumingRecipientAttempts = async ({
 	bindings,
 	batch,
 	message,
 	messageBody,
 	progress,
+	startedAt,
 	recipient,
 	error,
 	deliveryOutcomeUnknown,
@@ -197,17 +198,18 @@ const requeueWithoutConsumingAttempts = async ({
 	message: Message<unknown>
 	messageBody: MailQueueMessage
 	progress: MailCampaignChunkProgress
+	startedAt: string
 	recipient?: string
 	error: Error
 	deliveryOutcomeUnknown: boolean
 	summary: {
 		retried: number
 		budgetExhausted: number
-		requeued: number
 	}
 }) => {
 	summary.budgetExhausted += 1
 	summary.retried += 1
+	const willRetry = message.attempts <= QUEUE_CONSUMER_MAX_RETRIES
 
 	logQueueEvent('mail_send_queue.invocation_budget_exhausted', {
 		queue: batch.queue,
@@ -219,7 +221,8 @@ const requeueWithoutConsumingAttempts = async ({
 		recipient,
 		nextRecipientOffset: progress.nextRecipientOffset,
 		attempts: progress.currentRecipientAttempts,
-		willRetry: true,
+		queueAttempts: message.attempts,
+		willRetry,
 		delivery_outcome_unknown: deliveryOutcomeUnknown,
 		sesMaxAttempts: QUEUE_CONSUMER_SES_MAX_ATTEMPTS,
 		queueConsumerMaxBatchSize: QUEUE_CONSUMER_MAX_BATCH_SIZE,
@@ -231,29 +234,25 @@ const requeueWithoutConsumingAttempts = async ({
 	// send that failed during bookkeeping is not rolled back, and a failed send
 	// keeps the unsent offset / attempt counters unchanged.
 
-	try {
-		await requeueChunkMessage(bindings, messageBody)
-		summary.requeued += 1
-		message.ack()
-	} catch (requeueError) {
-		await reportQueueError(
-			toError(requeueError),
-			bindings.ERROR_NOTIFICATION_TOKEN,
-			{
-				queue: batch.queue,
-				environment: bindings.ENVIRONMENT,
-				reason: 'continuation enqueue failed after budget exhaustion',
-				messageId: message.id,
-				campaignId: messageBody.campaignId,
-				recipient,
-				attempts: progress.currentRecipientAttempts,
-				willRetry: true,
-			},
-		)
-		message.retry({
-			delaySeconds: RETRY_DELAY_SECONDS,
+	if (!willRetry) {
+		await markCampaignFailed(bindings, messageBody.campaignId, startedAt)
+		await reportQueueError(error, bindings.ERROR_NOTIFICATION_TOKEN, {
+			queue: batch.queue,
+			environment: bindings.ENVIRONMENT,
+			reason: 'invocation budget exhaustion retries exhausted',
+			messageId: message.id,
+			campaignId: messageBody.campaignId,
+			recipient,
+			attempts: message.attempts,
+			willRetry: false,
 		})
 	}
+
+	// Keep the same queue message so max_retries and DLQ delivery remain effective.
+	// Recipient attempts live in R2 and are intentionally unchanged here.
+	message.retry({
+		delaySeconds: RETRY_DELAY_SECONDS,
+	})
 }
 
 export const handleMailSendQueue = async (
@@ -406,12 +405,13 @@ export const handleMailSendQueue = async (
 					const resolvedError = toError(error)
 
 					if (isInvocationBudgetExhaustedError(resolvedError)) {
-						await requeueWithoutConsumingAttempts({
+						await retryWithoutConsumingRecipientAttempts({
 							bindings,
 							batch,
 							message,
 							messageBody: message.body,
 							progress,
+							startedAt,
 							recipient,
 							error: resolvedError,
 							// SES accept/reject is unknown when the Worker subrequest budget trips.
@@ -434,12 +434,12 @@ export const handleMailSendQueue = async (
 						campaignId: message.body.campaignId,
 						recipient,
 						attempts: currentRecipientAttempts,
-						willRetry: currentRecipientAttempts < FINAL_ATTEMPT_COUNT,
+						willRetry: currentRecipientAttempts < MAX_RECIPIENT_ATTEMPTS,
 						errorName: resolvedError.name,
 						errorMessage: resolvedError.message,
 					})
 
-					if (currentRecipientAttempts < FINAL_ATTEMPT_COUNT) {
+					if (currentRecipientAttempts < MAX_RECIPIENT_ATTEMPTS) {
 						summary.retried += 1
 						await saveCampaignChunkProgress(
 							bindings.MAIL_LOGS_BUCKET,
@@ -553,13 +553,14 @@ export const handleMailSendQueue = async (
 					const resolvedError = toError(error)
 
 					if (isInvocationBudgetExhaustedError(resolvedError)) {
-						await requeueWithoutConsumingAttempts({
+						await retryWithoutConsumingRecipientAttempts({
 							bindings,
 							batch,
 							message,
 							messageBody: message.body,
 							// Recipient may already have been accepted by SES; progress not advanced.
 							progress,
+							startedAt,
 							recipient,
 							error: resolvedError,
 							deliveryOutcomeUnknown: true,
@@ -619,12 +620,13 @@ export const handleMailSendQueue = async (
 					currentRecipientAttempts: 0,
 				}
 
-				await requeueWithoutConsumingAttempts({
+				await retryWithoutConsumingRecipientAttempts({
 					bindings,
 					batch,
 					message,
 					messageBody: message.body,
 					progress,
+					startedAt,
 					error: resolvedError,
 					deliveryOutcomeUnknown: true,
 					summary,
@@ -632,7 +634,7 @@ export const handleMailSendQueue = async (
 				continue
 			}
 
-			const willRetry = message.attempts < FINAL_ATTEMPT_COUNT
+			const willRetry = message.attempts <= QUEUE_CONSUMER_MAX_RETRIES
 			if (!willRetry) {
 				await markCampaignFailed(bindings, message.body.campaignId, startedAt)
 			}

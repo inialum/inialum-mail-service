@@ -18,5 +18,8 @@ export const RECIPIENTS_PER_CHUNK = 40
 /** Keep in sync with wrangler.json queues.*.consumers[].max_batch_size. */
 export const QUEUE_CONSUMER_MAX_BATCH_SIZE = 1
 
+/** Keep in sync with wrangler.json queues.*.consumers[].max_retries. */
+export const QUEUE_CONSUMER_MAX_RETRIES = 5
+
 /** SES SDK maxAttempts for the queue consumer only (single-send API keeps SDK default). */
 export const QUEUE_CONSUMER_SES_MAX_ATTEMPTS = 1

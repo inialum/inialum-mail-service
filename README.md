@@ -76,7 +76,9 @@ INIALUM runs on Workers Free. Bulk send (`POST /api/v1/send-multiple`) must stay
 - Queue consumer SES SDK `maxAttempts`: **1** (no automatic SDK retries)
 - Single-send `POST /api/v1/send` keeps the SDK default retry contract
 
-If Observability shows `Too many subrequests`, the consumer requeues the chunk without consuming recipient attempts and logs `invocation_budget_exhausted`. When SES accept/reject is unknown, logs include `delivery_outcome_unknown: true` (a later retry may duplicate delivery).
+A Dead Letter Queue (DLQ) holds messages that still fail after all retries, so they can be investigated or manually retried instead of being retried forever.
+
+If Observability shows `Too many subrequests`, the consumer retries the same queue message without consuming recipient attempts and logs `invocation_budget_exhausted`. Queue `max_retries` remains effective, and after all retries the campaign is marked failed and the message is moved to the DLQ. When SES accept/reject is unknown, logs include `delivery_outcome_unknown: true` (a later retry may duplicate delivery).
 
 Queue daily ops are counted per queue message write/read/delete (and retry reads), not per recipient.
 

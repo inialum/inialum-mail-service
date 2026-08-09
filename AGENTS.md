@@ -30,7 +30,7 @@ This file provides guidance for coding agents working in this repository.
 - `POST /api/v1/send`: send a single email via AWS SES (SDK default retries allowed)
 - `POST /api/v1/send-multiple`: accept an async campaign and enqueue up to `RECIPIENTS_PER_CHUNK` (40) recipients per queue message
 - Queue consumer: `max_batch_size=1`, SES SDK `maxAttempts=1`, paced at `~8/sec` (`SEND_INTERVAL_MS=125`)
-- Retry policy: recipient-level requeue with DLQ fallback; invocation budget exhaustion requeues without consuming recipient attempts
+- Retry policy: recipient-level continuation messages; invocation budget exhaustion retries the same queue message without consuming recipient attempts, preserving `max_retries` and moving exhausted messages to the failed-message holding queue (Dead Letter Queue, DLQ)
 - Free budget note: size sends as `batch × chunk × SES maxAttempts` and keep headroom for best-effort error notification. Do not enable SES SDK retries on the consumer while staying on Free
 
 ### Storage and Logging
