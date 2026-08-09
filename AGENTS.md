@@ -8,7 +8,6 @@ This file provides guidance for coding agents working in this repository.
 
 - `pnpm run dev` - Start local development (`wrangler dev` on `:8080` + local SES on `:8005`)
 - `pnpm run create-token` - Generate JWT token for API testing
-- `pnpm run migrate:r2-keys` - Ops CLI under `scripts/` (not deployed to Workers)
 
 ### Quality Checks
 
