@@ -8,6 +8,7 @@ This file provides guidance for coding agents working in this repository.
 
 - `pnpm run dev` - Start local development (`wrangler dev` on `:8080` + local SES on `:8005`)
 - `pnpm run create-token` - Generate JWT token for API testing
+- `pnpm run migrate:r2-keys` - Ops CLI under `scripts/` (not deployed to Workers)
 
 ### Quality Checks
 
@@ -38,8 +39,8 @@ This file provides guidance for coding agents working in this repository.
 - R2 bucket binding: `MAIL_LOGS_BUCKET` (`inialum-mail-service-logs`)
 - Campaign acceptance logs and recipient failure logs are stored as JSON
 - Ops lookup paths (see README "Investigating bulk-send failures"):
-  - Final recipient failures: `{env}/multiple/failures/{date}/{campaignId}-{recipient}-attempt{N}.json`
-  - Campaign status / chunk progress: `{env}/multiple/campaigns/{campaignId}/...`
+  - Final recipient failures: `{env}/logs/campaigns/failures/{date}/{campaignId}-{recipient}-attempt{N}.json`
+  - Campaign status / chunk progress: `{env}/state/campaigns/{campaignId}/...`
 - Error notification is best-effort; prefer R2 + Workers Observability when investigating
 - Structured logs include `mail_send_queue.invocation_budget_exhausted` (with `delivery_outcome_unknown` when SES accept/reject is unknown) and `mail_send_queue.notification_failed`
 
