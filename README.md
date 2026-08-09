@@ -67,6 +67,19 @@ The generated token uses `TOKEN_SECRET` (defined in `.dev.vars`) as the secret.
 This service is deployed to [Cloudflare Workers](https://workers.cloudflare.com) using GitHub Actions. When a new commit is pushed to `main` branch, the service will be automatically deployed.  
 If you want to deploy to the staging environment, push the commit to `staging` branch. (`@inialum/inialum-dev` will handle this)
 
+### Workers Free delivery constraints
+
+INIALUM runs on Workers Free. Bulk send (`POST /api/v1/send-multiple`) must stay within the external subrequest limit (50 / invocation):
+
+- Queue consumer `max_batch_size`: **1**
+- Recipients per queue message (`RECIPIENTS_PER_CHUNK`): **40**
+- Queue consumer SES SDK `maxAttempts`: **1** (no automatic SDK retries)
+- Single-send `POST /api/v1/send` keeps the SDK default retry contract
+
+If Observability shows `Too many subrequests`, the consumer requeues the chunk without consuming recipient attempts and logs `invocation_budget_exhausted`. When SES accept/reject is unknown, logs include `delivery_outcome_unknown: true` (a later retry may duplicate delivery).
+
+Queue daily ops are counted per queue message write/read/delete (and retry reads), not per recipient.
+
 ## License
 
 Licensed under [Apache License 2.0](LICENSE).
