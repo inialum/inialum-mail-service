@@ -145,7 +145,7 @@ describe('API v1', () => {
 		)
 	})
 
-	test('POST /send-multiple (should chunk up to 400 recipients into multiple queue messages)', async () => {
+	test('POST /send-multiple (should chunk recipients within Free subrequest budget)', async () => {
 		sendBatchMock.mockResolvedValueOnce(undefined)
 		vi.mocked(saveCampaignManifest).mockResolvedValueOnce(undefined)
 		vi.mocked(saveCampaignStatus).mockResolvedValueOnce(undefined)
@@ -154,7 +154,7 @@ describe('API v1', () => {
 
 		const recipients = Array.from(
 			{
-				length: 250,
+				length: 85,
 			},
 			(_, index) => `user${index}@example.com`,
 		)
@@ -176,7 +176,7 @@ describe('API v1', () => {
 				body: {
 					campaignId: 'test-message-id',
 					chunkIndex: 0,
-					recipients: recipients.slice(0, 100),
+					recipients: recipients.slice(0, 40),
 				},
 				contentType: 'json',
 			},
@@ -184,7 +184,7 @@ describe('API v1', () => {
 				body: {
 					campaignId: 'test-message-id',
 					chunkIndex: 1,
-					recipients: recipients.slice(100, 200),
+					recipients: recipients.slice(40, 80),
 				},
 				contentType: 'json',
 			},
@@ -192,7 +192,7 @@ describe('API v1', () => {
 				body: {
 					campaignId: 'test-message-id',
 					chunkIndex: 2,
-					recipients: recipients.slice(200, 250),
+					recipients: recipients.slice(80, 85),
 				},
 				contentType: 'json',
 			},
