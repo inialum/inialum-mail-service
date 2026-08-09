@@ -4,14 +4,38 @@ import {
 	SendEmailCommand,
 } from '@aws-sdk/client-sesv2'
 import { mockClient } from 'aws-sdk-client-mock'
+import { beforeEach, describe, expect, test } from 'vitest'
 
 import type { Mail } from '../../types/Mail'
 import { SESApiError } from '../error/applicationErrors'
-import { sendEmailWithSES } from './ses'
+import { buildSesClientConfig, sendEmailWithSES } from './ses'
 
 const SESv2Mock = mockClient(SESv2Client)
 beforeEach(() => {
 	SESv2Mock.reset()
+})
+
+describe('buildSesClientConfig', () => {
+	const credentials: SESv2ClientConfig['credentials'] = {
+		accessKeyId: 'dummyKey',
+		secretAccessKey: 'dummySecret',
+	}
+
+	test('sets maxAttempts when provided for the queue consumer', () => {
+		expect(
+			buildSesClientConfig(credentials, undefined, { maxAttempts: 1 }),
+		).toEqual(
+			expect.objectContaining({
+				maxAttempts: 1,
+			}),
+		)
+	})
+
+	test('omits maxAttempts so single-send keeps the SDK default retry contract', () => {
+		expect(buildSesClientConfig(credentials, undefined)).not.toHaveProperty(
+			'maxAttempts',
+		)
+	})
 })
 
 describe('sendEmailWithSES', () => {
