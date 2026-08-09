@@ -1,6 +1,7 @@
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
 import { env } from 'hono/adapter'
 
+import { RECIPIENTS_PER_CHUNK } from '../../../constants/mail'
 import {
 	SendApi400ErrorSchemaV1,
 	SendApi500ErrorSchemaV1,
@@ -32,7 +33,6 @@ import type {
 import type { MailQueueMessage } from '../../../types/MailQueueMessage'
 
 const sendMultipleApiV1 = new OpenAPIHono<{ Bindings: Bindings }>()
-const RECIPIENTS_PER_CHUNK = 100
 
 const dedupeRecipients = (recipients: string[]) => {
 	const seen = new Set<string>()

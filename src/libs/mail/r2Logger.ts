@@ -81,6 +81,8 @@ export interface RecipientFailureLogData {
 	subject: string
 	attempts: number
 	error: string
+	notification_failed?: boolean
+	delivery_outcome_unknown?: boolean
 }
 
 export async function saveRecipientFailureLog(

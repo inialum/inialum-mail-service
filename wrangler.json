@@ -27,7 +27,7 @@
 		"consumers": [
 			{
 				"queue": "inialum-mail-send-production",
-				"max_batch_size": 10,
+				"max_batch_size": 1,
 				"max_batch_timeout": 2,
 				"max_retries": 5,
 				"retry_delay": 30,
@@ -59,7 +59,7 @@
 				"consumers": [
 					{
 						"queue": "inialum-mail-send-staging",
-						"max_batch_size": 10,
+						"max_batch_size": 1,
 						"max_batch_timeout": 2,
 						"max_retries": 5,
 						"retry_delay": 30,

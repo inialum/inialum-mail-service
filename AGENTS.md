@@ -23,18 +23,25 @@ This file provides guidance for coding agents working in this repository.
 - Deployment: GitHub Actions (`staging` branch -> staging, `main` branch -> production)
 - Auth: JWT middleware on `/api/*`
 - OpenAPI: served at `/schema/v1`
+- Plan: Workers Free (external subrequests 50 / invocation)
 
 ### Email Delivery Flow
 
-- `POST /api/v1/send`: send a single email via AWS SES
-- `POST /api/v1/send-multiple`: accept an async campaign and enqueue up to 100 recipients per queue message
-- Queue consumer: sends emails via AWS SES with controlled pace (`~8/sec`)
-- Retry policy: queue-level retries with DLQ fallback
+- `POST /api/v1/send`: send a single email via AWS SES (SDK default retries allowed)
+- `POST /api/v1/send-multiple`: accept an async campaign and enqueue up to `RECIPIENTS_PER_CHUNK` (40) recipients per queue message
+- Queue consumer: `max_batch_size=1`, SES SDK `maxAttempts=1`, paced at `~8/sec` (`SEND_INTERVAL_MS=125`)
+- Retry policy: recipient-level continuation messages; invocation budget exhaustion retries the same queue message without consuming recipient attempts, preserving `max_retries` and moving exhausted messages to the failed-message holding queue (Dead Letter Queue, DLQ)
+- Free budget note: size sends as `batch × chunk × SES maxAttempts` and keep headroom for best-effort error notification. Do not enable SES SDK retries on the consumer while staying on Free
 
 ### Storage and Logging
 
-- R2 bucket binding: `MAIL_LOGS_BUCKET`
+- R2 bucket binding: `MAIL_LOGS_BUCKET` (`inialum-mail-service-logs`)
 - Campaign acceptance logs and recipient failure logs are stored as JSON
+- Ops lookup paths (see README "Investigating bulk-send failures"):
+  - Final recipient failures: `{env}/multiple/failures/{date}/{campaignId}-{recipient}-attempt{N}.json`
+  - Campaign status / chunk progress: `{env}/multiple/campaigns/{campaignId}/...`
+- Error notification is best-effort; prefer R2 + Workers Observability when investigating
+- Structured logs include `mail_send_queue.invocation_budget_exhausted` (with `delivery_outcome_unknown` when SES accept/reject is unknown) and `mail_send_queue.notification_failed`
 
 ## Required Bindings and Vars
 

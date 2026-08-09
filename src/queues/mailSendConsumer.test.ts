@@ -146,6 +146,7 @@ describe('handleMailSendQueue', () => {
 		vi.mocked(updateCampaignStatus).mockReset()
 		vi.mocked(saveRecipientFailureLog).mockReset()
 		vi.mocked(reportQueueError).mockReset()
+		vi.mocked(reportQueueError).mockResolvedValue(true)
 
 		vi.mocked(getCampaignManifest).mockResolvedValue(baseManifest)
 		vi.mocked(getCampaignChunkProgress).mockResolvedValue(baseProgress)
@@ -188,6 +189,9 @@ describe('handleMailSendQueue', () => {
 				secretAccessKey: 'test-secret-access-key',
 			},
 			undefined,
+			{
+				maxAttempts: 1,
+			},
 		)
 		expect(vi.mocked(saveCampaignChunkProgress)).toHaveBeenCalledWith(
 			'mock-r2-bucket',
@@ -302,6 +306,100 @@ describe('handleMailSendQueue', () => {
 		)
 	})
 
+	test('should retry without consuming recipient attempts on invocation budget exhaustion', async () => {
+		vi.mocked(getCampaignChunkProgress).mockResolvedValueOnce({
+			...baseProgress,
+			currentRecipientAttempts: 2,
+		})
+		vi.mocked(sendEmailWithSES).mockRejectedValueOnce(
+			new Error('Too many subrequests by single Worker invocation'),
+		)
+		const message = createMessage(baseMessageBody, 5)
+		const batch = createBatch([message])
+		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+		await handleMailSendQueue(batch, bindings, 0)
+
+		expect(vi.mocked(saveCampaignChunkProgress)).not.toHaveBeenCalled()
+		expect(queueSendMock).not.toHaveBeenCalled()
+		expect(message.ack).not.toHaveBeenCalled()
+		expect(message.retry).toHaveBeenCalledWith({
+			delaySeconds: 30,
+		})
+		expect(vi.mocked(saveRecipientFailureLog)).not.toHaveBeenCalled()
+		expect(vi.mocked(reportQueueError)).not.toHaveBeenCalled()
+		expect(errorSpy).toHaveBeenCalledWith(
+			expect.stringContaining('invocation_budget_exhausted'),
+		)
+		expect(errorSpy).toHaveBeenCalledWith(
+			expect.stringContaining('"delivery_outcome_unknown":true'),
+		)
+		errorSpy.mockRestore()
+	})
+
+	test('should fail the campaign and hand budget exhaustion to the DLQ after queue retries are exhausted', async () => {
+		vi.mocked(getCampaignChunkProgress).mockResolvedValueOnce({
+			...baseProgress,
+			currentRecipientAttempts: 2,
+		})
+		vi.mocked(sendEmailWithSES).mockRejectedValueOnce(
+			new Error('Too many subrequests by single Worker invocation'),
+		)
+		const message = createMessage(baseMessageBody, 6)
+		const batch = createBatch([message])
+		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+		await handleMailSendQueue(batch, bindings, 0)
+
+		expect(queueSendMock).not.toHaveBeenCalled()
+		expect(message.ack).not.toHaveBeenCalled()
+		expect(message.retry).toHaveBeenCalledWith({
+			delaySeconds: 30,
+		})
+		expect(vi.mocked(updateCampaignStatus)).toHaveBeenCalledTimes(2)
+		expect(getStatusUpdaterResult(1)).toEqual(
+			expect.objectContaining({
+				status: 'failed',
+			}),
+		)
+		expect(vi.mocked(reportQueueError)).toHaveBeenCalledWith(
+			expect.any(Error),
+			'test-error-token',
+			expect.objectContaining({
+				reason: 'invocation budget exhaustion retries exhausted',
+				attempts: 6,
+				willRetry: false,
+			}),
+		)
+		errorSpy.mockRestore()
+	})
+
+	test('should record notification_failed when final failure notification fails', async () => {
+		vi.mocked(getCampaignChunkProgress).mockResolvedValueOnce({
+			...baseProgress,
+			currentRecipientAttempts: 4,
+		})
+		vi.mocked(sendEmailWithSES).mockRejectedValueOnce(
+			new Error('SES final error'),
+		)
+		vi.mocked(reportQueueError).mockResolvedValueOnce(false)
+		vi.mocked(saveRecipientFailureLog).mockResolvedValueOnce(undefined)
+		const message = createMessage(baseMessageBody, 1)
+		const batch = createBatch([message])
+
+		await handleMailSendQueue(batch, bindings, 0)
+
+		expect(vi.mocked(saveRecipientFailureLog)).toHaveBeenCalledWith(
+			'mock-r2-bucket',
+			expect.objectContaining({
+				to: 'user@example.com',
+				attempts: 5,
+				error: 'SES final error',
+				notification_failed: true,
+			}),
+		)
+	})
+
 	test('should use local SES endpoint outside production and staging', async () => {
 		vi.mocked(sendEmailWithSES).mockResolvedValueOnce({
 			$metadata: {
@@ -321,6 +419,9 @@ describe('handleMailSendQueue', () => {
 			expect.any(Object),
 			expect.any(Object),
 			LOCAL_SES_API_ENDPOINT,
+			{
+				maxAttempts: 1,
+			},
 		)
 	})
 
@@ -400,7 +501,7 @@ describe('handleMailSendQueue', () => {
 		vi.mocked(updateCampaignStatus).mockRejectedValueOnce(
 			new Error('campaign status update failed'),
 		)
-		const message = createMessage(baseMessageBody, 5)
+		const message = createMessage(baseMessageBody, 6)
 		const batch = createBatch([message])
 
 		await handleMailSendQueue(batch, bindings, 0)
@@ -420,7 +521,7 @@ describe('handleMailSendQueue', () => {
 				queue: 'inialum-mail-send-production',
 				reason: 'campaign processing failed',
 				campaignId: 'campaign-1',
-				attempts: 5,
+				attempts: 6,
 				willRetry: false,
 			}),
 		)
