@@ -47,8 +47,8 @@ Options:
   --env <name>              Target environment. Defaults to ENVIRONMENT or production.
   --bucket <name>           R2 bucket name. Defaults to wrangler.json binding for the environment.
   --account-id <id>         Cloudflare account ID. Defaults to CLOUDFLARE_ACCOUNT_ID.
-  --access-key-id <id>      R2 access key ID. Defaults to R2_ACCESS_KEY_ID or AWS_ACCESS_KEY_ID.
-  --secret-access-key <key> R2 secret access key. Defaults to R2_SECRET_ACCESS_KEY or AWS_SECRET_ACCESS_KEY.
+  --access-key-id <id>      R2 access key ID. Defaults to R2_ACCESS_KEY_ID.
+  --secret-access-key <key> R2 secret access key. Defaults to R2_SECRET_ACCESS_KEY.
   --jurisdiction <name>     Optional R2 jurisdiction, for example eu.
   --apply                   Copy objects to the new key structure.
   --delete-source           Delete legacy keys after a successful copy. Requires --apply.
@@ -113,12 +113,10 @@ const parseArgs = (argv: string[]): MigrationCliOptions | null => {
 		accessKeyId:
 			(flags.get('--access-key-id') as string | undefined) ??
 			process.env.R2_ACCESS_KEY_ID ??
-			process.env.AWS_ACCESS_KEY_ID ??
 			'',
 		secretAccessKey:
 			(flags.get('--secret-access-key') as string | undefined) ??
 			process.env.R2_SECRET_ACCESS_KEY ??
-			process.env.AWS_SECRET_ACCESS_KEY ??
 			'',
 		bucketName: (flags.get('--bucket') as string | undefined) ?? '',
 		apply,
