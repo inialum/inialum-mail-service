@@ -38,8 +38,8 @@ This file provides guidance for coding agents working in this repository.
 - R2 bucket binding: `MAIL_LOGS_BUCKET` (`inialum-mail-service-logs`)
 - Campaign acceptance logs and recipient failure logs are stored as JSON
 - Ops lookup paths (see README "Investigating bulk-send failures"):
-  - Final recipient failures: `{env}/multiple/failures/{date}/{campaignId}-{recipient}-attempt{N}.json`
-  - Campaign status / chunk progress: `{env}/multiple/campaigns/{campaignId}/...`
+  - Final recipient failures: `{env}/logs/campaigns/failures/{date}/{campaignId}-{recipient}-attempt{N}.json`
+  - Campaign status / chunk progress: `{env}/state/campaigns/{campaignId}/...`
 - Error notification is best-effort; prefer R2 + Workers Observability when investigating
 - Structured logs include `mail_send_queue.invocation_budget_exhausted` (with `delivery_outcome_unknown` when SES accept/reject is unknown) and `mail_send_queue.notification_failed`
 

@@ -11,6 +11,11 @@
 		"jsx": "react-jsx",
 		"jsxImportSource": "hono/jsx"
 	},
-	"include": ["src", "drizzle.config.ts", "worker-configuration.d.ts"],
+	"include": [
+		"src",
+		"scripts",
+		"drizzle.config.ts",
+		"worker-configuration.d.ts"
+	],
 	"exclude": ["node_modules"]
 }

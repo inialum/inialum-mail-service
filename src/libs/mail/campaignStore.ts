@@ -5,10 +5,10 @@ import type {
 	MailCampaignStatusType,
 } from '../../types/MailCampaign'
 
-const CAMPAIGN_ROOT = 'multiple/campaigns'
+const CAMPAIGN_STATE_ROOT = 'state/campaigns'
 
 const campaignBaseKey = (environment: string, campaignId: string) =>
-	`${environment}/${CAMPAIGN_ROOT}/${campaignId}`
+	`${environment}/${CAMPAIGN_STATE_ROOT}/${campaignId}`
 
 const manifestKey = (environment: string, campaignId: string) =>
 	`${campaignBaseKey(environment, campaignId)}/manifest.json`

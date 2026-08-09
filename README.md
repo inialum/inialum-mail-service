@@ -67,15 +67,15 @@ Bulk send (`POST /api/v1/send-multiple`) writes campaign state and failure evide
 
 | What you want | Where to look |
 | --- | --- |
-| Which recipient finally failed | `{env}/multiple/failures/{YYYY-MM-DD}/{campaignId}-{recipient}-attempt{N}.json` |
-| Campaign totals (sent / failed) | `{env}/multiple/campaigns/{campaignId}/status.json` |
-| Where a chunk stopped | `{env}/multiple/campaigns/{campaignId}/chunks/{chunkIndex}.json` (`nextRecipientOffset`) + recipients in `manifest.json` |
-| Campaign accepted | `{env}/multiple/campaigns/{YYYY-MM-DD}/{campaignId}.json` |
+| Which recipient finally failed | `{env}/logs/campaigns/failures/{YYYY-MM-DD}/{campaignId}-{recipient}-attempt{N}.json` |
+| Campaign totals (sent / failed) | `{env}/state/campaigns/{campaignId}/status.json` |
+| Where a chunk stopped | `{env}/state/campaigns/{campaignId}/chunks/{chunkIndex}.json` (`nextRecipientOffset`) + recipients in `manifest.json` |
+| Campaign accepted | `{env}/logs/campaigns/accepted/{YYYY-MM-DD}/{campaignId}.json` |
 
 Example failure object key:
 
 ```text
-production/multiple/failures/2026-08-09/campaign-1-user_example.com-attempt5.json
+production/logs/campaigns/failures/2026-08-09/campaign-1-user_example.com-attempt5.json
 ```
 
 The JSON includes `to`, `error`, `attempts`, `campaignId`, and `subject`. Final-failure objects may also include `notification_failed`.
@@ -86,7 +86,7 @@ How to open objects:
 2. Or CLI:
 
 ```shell
-pnpm wrangler r2 object get inialum-mail-service-logs/production/multiple/failures/2026-08-09/<file>.json --file=-
+pnpm wrangler r2 object get inialum-mail-service-logs/production/logs/campaigns/failures/2026-08-09/<file>.json --file=-
 ```
 
 Notes:
