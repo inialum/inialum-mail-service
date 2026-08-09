@@ -16,7 +16,6 @@
 		"test:ci": "pnpm run test:coverage",
 		"test:coverage": "vitest run --coverage",
 		"typecheck": "tsc --noEmit",
-		"migrate:r2-keys": "tsx scripts/migrateR2Keys.ts",
 		"gen:cf-types": "wrangler types --env-interface CloudflareBindings",
 		"wrangler": "wrangler"
 	},
@@ -30,7 +29,6 @@
 		"zod": "^3.23.8"
 	},
 	"devDependencies": {
-		"@aws-sdk/client-s3": "^3.682.0",
 		"@biomejs/biome": "2.2.2",
 		"@inialum/token-generator": "^0.3.0",
 		"@types/libmime": "^5.0.3",
@@ -39,7 +37,6 @@
 		"aws-ses-v2-local": "^2.5.1",
 		"npm-run-all": "^4.1.5",
 		"openapi-typescript": "^7.6.1",
-		"tsx": "^4.21.0",
 		"type-fest": "^4.37.0",
 		"typescript": "^5.8.2",
 		"vitest": "^4.1.0",
