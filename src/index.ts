@@ -5,7 +5,11 @@ import { cors } from 'hono/cors'
 import { jwt } from 'hono/jwt'
 import { secureHeaders } from 'hono/secure-headers'
 
-import { API_ENDPOINT, ORIGINS } from './constants/config'
+import {
+	API_ENDPOINT,
+	ERROR_NOTIFICATION_TIMEOUT_MS,
+	ORIGINS,
+} from './constants/config'
 import { handleMailSendQueue } from './queues/mailSendConsumer'
 import { api } from './routes/api'
 import type { Bindings } from './types/Bindings'
@@ -21,6 +25,7 @@ app.use('*', async (c, next) => {
 		token: ERROR_NOTIFICATION_TOKEN,
 		serviceName: 'inialum-mail-service',
 		environment: ENVIRONMENT,
+		timeout: ERROR_NOTIFICATION_TIMEOUT_MS,
 		beforeSend(error) {
 			// Ignore errors with no authorization included in request
 			if (error.message.includes('no authorization included in request')) {

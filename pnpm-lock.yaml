@@ -15,11 +15,11 @@ importers:
         specifier: ^0.16.4
         version: 0.16.4(hono@4.13.1)(zod@3.24.2)
       '@inialum/error-notification-service-hono-middleware':
-        specifier: ^0.4.0
-        version: 0.4.0(hono@4.13.1)
+        specifier: ^0.5.0
+        version: 0.5.0(hono@4.13.1)
       '@inialum/error-notification-service-javascript-sdk':
-        specifier: ^0.4.0
-        version: 0.4.0
+        specifier: ^0.5.0
+        version: 0.5.0
       hono:
         specifier: ^4.13.1
         version: 4.13.1
@@ -1266,14 +1266,14 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@inialum/error-notification-service-hono-middleware@0.4.0':
-    resolution: {integrity: sha512-3/ZiGVbv5HSSJG7xHOffTFYRctllVRIEmF493sZ31Uys2ZjHxvS/mqw+bRO9YBaXehcNS72asPjqnLC8vrnFWg==}
+  '@inialum/error-notification-service-hono-middleware@0.5.0':
+    resolution: {integrity: sha512-1sDYdwsBJPcF/e0epVHSKLG/hwPJSnBs060D0CFD/VdxADVul12/Rf75f/Wh+hQ+Jha1jIiCMjvgFoKkvAw9qA==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       hono: '>=4.2.0'
 
-  '@inialum/error-notification-service-javascript-sdk@0.4.0':
-    resolution: {integrity: sha512-EaR/ghS65Nfe+QuqEm1QEJQAU09gZaMizLcBO/GEq6GjSXneL6j3X45aV5mIYmZxAzx4VjSec4ycTY+3atmmRA==}
+  '@inialum/error-notification-service-javascript-sdk@0.5.0':
+    resolution: {integrity: sha512-gz5wvsUm2qtd/o61vMQR+8pK5DybQbkD1pPByAlSzLvTWQxUzD59TngPTK8S+O7TZIVL6Oj4H/AnSvncSN/Mhw==}
     engines: {node: '>=20.0.0'}
 
   '@inialum/token-generator@0.3.0':
@@ -2968,8 +2968,8 @@ packages:
     resolution: {integrity: sha512-kbpaSSGJTWdAY5KPVeMOKXSrPtr8C8C7wodJbcsd51jRnmD+GZu8Y0VoU6Dm5Z4vWr0Ig/1NKuWRKf7j5aaYSg==}
     engines: {node: '>=6'}
 
-  openapi-fetch@0.13.0:
-    resolution: {integrity: sha512-6Nlf/BDbtyHwHdNrLPUiyt4CZMzL3ZyAt55yWH8W7+Z+8aYWnvca4uZHQHXViy8KcnCMqAhLM/bifh2Yjjkf6w==}
+  openapi-fetch@0.15.2:
+    resolution: {integrity: sha512-rdYTzUmSsJevmNqg7fwUVGuKc2Gfb9h6ph74EVPkPfIGJaZTfqdIbJahtbJ3qg1LKinln30hqZniLnKpH0RJBg==}
 
   openapi-typescript-helpers@0.0.15:
     resolution: {integrity: sha512-opyTPaunsklCBpTK8JGef6mfPhLSnyy5a0IN9vKtx3+4aExf+KxEqYwIy3hqkedXIB97u357uLMJsOnm3GVjsw==}
@@ -4881,14 +4881,14 @@ snapshots:
   '@img/sharp-win32-x64@0.35.2':
     optional: true
 
-  '@inialum/error-notification-service-hono-middleware@0.4.0(hono@4.13.1)':
+  '@inialum/error-notification-service-hono-middleware@0.5.0(hono@4.13.1)':
     dependencies:
-      '@inialum/error-notification-service-javascript-sdk': 0.4.0
+      '@inialum/error-notification-service-javascript-sdk': 0.5.0
       hono: 4.13.1
 
-  '@inialum/error-notification-service-javascript-sdk@0.4.0':
+  '@inialum/error-notification-service-javascript-sdk@0.5.0':
     dependencies:
-      openapi-fetch: 0.13.0
+      openapi-fetch: 0.15.2
 
   '@inialum/token-generator@0.3.0':
     dependencies:
@@ -6972,7 +6972,7 @@ snapshots:
     dependencies:
       mimic-fn: 2.1.0
 
-  openapi-fetch@0.13.0:
+  openapi-fetch@0.15.2:
     dependencies:
       openapi-typescript-helpers: 0.0.15
 
