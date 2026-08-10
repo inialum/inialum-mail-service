@@ -1,27 +1,10 @@
-import { resolve } from 'node:path'
-
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
 	test: {
-		globals: true,
-		environment: 'miniflare',
-		environmentOptions: {
-			bindings: {
-				ENVIRONMENT: 'test',
-			},
+		coverage: {
+			provider: 'istanbul',
 		},
-	},
-	resolve: {
-		alias: [
-			{
-				find: '@Root',
-				replacement: resolve(__dirname, '.'),
-			},
-			{
-				find: '@',
-				replacement: resolve(__dirname, './src'),
-			},
-		],
+		projects: ['./vitest.unit.config.ts', './vitest.workers.config.ts'],
 	},
 })

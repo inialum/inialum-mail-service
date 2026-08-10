@@ -29,7 +29,9 @@ vi.mock('../../../libs/idempotency/store', () => {
 vi.mock('hono/adapter', () => {
 	return {
 		env: () => ({
-			...getMiniflareBindings(),
+			ENVIRONMENT: 'test',
+			AWS_ACCESS_KEY_ID: 'test-access-key-id',
+			AWS_SECRET_ACCESS_KEY: 'test-secret-access-key',
 			DB: {},
 		}),
 	}

@@ -64,6 +64,7 @@ This file provides guidance for coding agents working in this repository.
 - Prefer minimal, focused changes and keep tests updated.
 - Communicate with the developer in Japanese.
 - Write code comments and documentation in English.
+- Vitest unit and Workers tests enable `globals`, so Vitest global API imports can be omitted.
 
 ## Change Checklist
 
