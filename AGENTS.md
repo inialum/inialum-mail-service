@@ -35,7 +35,10 @@ This file provides guidance for coding agents working in this repository.
 
 ### Storage and Logging
 
-- R2 bucket binding: `MAIL_LOGS_BUCKET` (`inialum-mail-service-logs`)
+- R2 bucket binding: `MAIL_LOGS_BUCKET`
+  - production: `inialum-mail-service-logs`
+  - staging: `inialum-mail-service-logs-staging` (do not run backfill against production from staging)
+- D1 binding: `DB` (`inialum-mail-service-db` / `-staging`) for the automatically managed `idempotency_keys` table only in Phase 0; no Phase 0 schema migration is required
 - Campaign acceptance logs and recipient failure logs are stored as JSON
 - Ops lookup paths (see README "Investigating bulk-send failures"):
   - Final recipient failures: `{env}/logs/campaigns/failures/{date}/{campaignId}-{recipient}-attempt{N}.json`
@@ -52,6 +55,7 @@ This file provides guidance for coding agents working in this repository.
 - `AWS_SECRET_ACCESS_KEY`
 - `MAIL_LOGS_BUCKET`
 - `MAIL_SEND_QUEUE`
+- `DB`
 
 ## Working Conventions
 

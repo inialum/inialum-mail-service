@@ -17,6 +17,13 @@
 			"bucket_name": "inialum-mail-service-logs"
 		}
 	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "inialum-mail-service-db",
+			"database_id": "9d07a540-6cdc-4634-a66b-e31f53a8dd18"
+		}
+	],
 	"queues": {
 		"producers": [
 			{
@@ -46,7 +53,14 @@
 			"r2_buckets": [
 				{
 					"binding": "MAIL_LOGS_BUCKET",
-					"bucket_name": "inialum-mail-service-logs"
+					"bucket_name": "inialum-mail-service-logs-staging"
+				}
+			],
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "inialum-mail-service-db-staging",
+					"database_id": "3fbe161c-d18e-482e-a8e6-938d73e7d295"
 				}
 			],
 			"queues": {

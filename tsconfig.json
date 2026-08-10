@@ -6,16 +6,12 @@
 		"esModuleInterop": true,
 		"strict": true,
 		"skipLibCheck": true,
+		"resolveJsonModule": true,
 		"lib": ["esnext"],
 		"types": ["vitest/globals", "vitest-environment-miniflare/globals"],
 		"jsx": "react-jsx",
 		"jsxImportSource": "hono/jsx"
 	},
-	"include": [
-		"src",
-		"scripts",
-		"drizzle.config.ts",
-		"worker-configuration.d.ts"
-	],
+	"include": ["src", "scripts", "worker-configuration.d.ts"],
 	"exclude": ["node_modules"]
 }
