@@ -45,6 +45,7 @@ app.use('/api/*', async (c, next) => {
 	const { TOKEN_SECRET } = env(c)
 	const auth = jwt({
 		secret: TOKEN_SECRET,
+		alg: 'HS256',
 	})
 
 	return await auth(c, next)

@@ -1,8 +1,13 @@
+import { type MemoryStore, memoryStore } from 'hono-idempotency/stores/memory'
 import type { ZodError } from 'zod'
 
 import type { SendApiRequestV1 } from '../../../libs/api/v1/schema/send'
 import { sendEmailWithSES } from '../../../libs/mail/ses'
 import { apiV1 } from '.'
+
+const idempotencyState = vi.hoisted(() => ({
+	store: undefined as MemoryStore | undefined,
+}))
 
 vi.mock('../../../libs/mail/ses', () => {
 	return {
@@ -10,9 +15,23 @@ vi.mock('../../../libs/mail/ses', () => {
 	}
 })
 
+vi.mock('../../../libs/idempotency/store', () => {
+	return {
+		createMailIdempotencyStore: () => {
+			if (!idempotencyState.store) {
+				throw new Error('Idempotency test store is not initialized')
+			}
+			return idempotencyState.store
+		},
+	}
+})
+
 vi.mock('hono/adapter', () => {
 	return {
-		env: () => getMiniflareBindings(),
+		env: () => ({
+			...getMiniflareBindings(),
+			DB: {},
+		}),
 	}
 })
 
@@ -27,25 +46,47 @@ describe('API v1', () => {
 		},
 	}
 
-	test('POST /send (should return data with no errors)', async () => {
+	const requestSend = (body: SendApiRequestV1, idempotencyKey?: string) =>
+		apiV1.request('/send', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
+			},
+			body: JSON.stringify(body),
+		})
+
+	beforeEach(() => {
+		vi.clearAllMocks()
+		idempotencyState.store = memoryStore()
+	})
+
+	test('POST /send without Idempotency-Key sends successfully', async () => {
 		vi.mocked(sendEmailWithSES).mockResolvedValueOnce({
 			$metadata: {
 				httpStatusCode: 200,
 			},
 		})
 
-		const res = await apiV1.request('/send', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(apiBodyContent),
-		})
+		const res = await requestSend(apiBodyContent)
 
 		expect(res.status).toBe(200)
 		expect(await res.json()).toEqual({
 			status: 'ok',
 		})
+		expect(sendEmailWithSES).toHaveBeenCalledTimes(1)
+	})
+
+	test('POST /send with Idempotency-Key sends successfully', async () => {
+		vi.mocked(sendEmailWithSES).mockResolvedValueOnce({
+			$metadata: { httpStatusCode: 200 },
+		})
+
+		const res = await requestSend(apiBodyContent, 'invitation:inv_1:g1')
+
+		expect(res.status).toBe(200)
+		expect(await res.json()).toEqual({ status: 'ok' })
+		expect(sendEmailWithSES).toHaveBeenCalledTimes(1)
 	})
 
 	test('POST /send (should return with error message)', async () => {

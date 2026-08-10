@@ -13,16 +13,19 @@ importers:
         version: 3.684.0
       '@hono/zod-openapi':
         specifier: ^0.16.4
-        version: 0.16.4(hono@4.6.8)(zod@3.24.2)
+        version: 0.16.4(hono@4.13.1)(zod@3.24.2)
       '@inialum/error-notification-service-hono-middleware':
         specifier: ^0.4.0
-        version: 0.4.0(hono@4.6.8)
+        version: 0.4.0(hono@4.13.1)
       '@inialum/error-notification-service-javascript-sdk':
         specifier: ^0.4.0
         version: 0.4.0
       hono:
-        specifier: ^4.6.8
-        version: 4.6.8
+        specifier: ^4.13.1
+        version: 4.13.1
+      hono-idempotency:
+        specifier: ^0.9.1
+        version: 0.9.1(hono@4.13.1)
       libmime:
         specifier: ^5.3.6
         version: 5.3.6
@@ -2142,8 +2145,18 @@ packages:
     resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
     hasBin: true
 
-  hono@4.6.8:
-    resolution: {integrity: sha512-f+2Ec9JAzabT61pglDiLJcF/DjiSefZkjCn9bzm1cYLGkD5ExJ3Jnv93ax9h0bn7UPLHF81KktoyjdQfWI2n1Q==}
+  hono-idempotency@0.9.1:
+    resolution: {integrity: sha512-6+jMpgtXl0mHbvItp573WwUBoEBejhM+6sKygtjdBjNfWrUpGoFYxjyn6AKhsCC80Ct5wZCENPz2C0RBWGuzfg==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      hono: '>=4.12.27'
+      hono-problem-details: '>=0.1.0'
+    peerDependenciesMeta:
+      hono-problem-details:
+        optional: true
+
+  hono@4.13.1:
+    resolution: {integrity: sha512-kdJoFVv2xmayw6cY09H7AbMJMt8Jn5jdlEdXsP7AGBdF2DIptVlKlOLKXP41yPip4/a3yQPv9gVcJYI8YY04dw==}
     engines: {node: '>=16.9.0'}
 
   hosted-git-info@2.8.9:
@@ -4096,16 +4109,16 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@hono/zod-openapi@0.16.4(hono@4.6.8)(zod@3.24.2)':
+  '@hono/zod-openapi@0.16.4(hono@4.13.1)(zod@3.24.2)':
     dependencies:
       '@asteasolutions/zod-to-openapi': 7.2.0(zod@3.24.2)
-      '@hono/zod-validator': 0.3.0(hono@4.6.8)(zod@3.24.2)
-      hono: 4.6.8
+      '@hono/zod-validator': 0.3.0(hono@4.13.1)(zod@3.24.2)
+      hono: 4.13.1
       zod: 3.24.2
 
-  '@hono/zod-validator@0.3.0(hono@4.6.8)(zod@3.24.2)':
+  '@hono/zod-validator@0.3.0(hono@4.13.1)(zod@3.24.2)':
     dependencies:
-      hono: 4.6.8
+      hono: 4.13.1
       zod: 3.24.2
 
   '@humanfs/core@0.19.1': {}
@@ -4217,10 +4230,10 @@ snapshots:
   '@img/sharp-win32-x64@0.34.5':
     optional: true
 
-  '@inialum/error-notification-service-hono-middleware@0.4.0(hono@4.6.8)':
+  '@inialum/error-notification-service-hono-middleware@0.4.0(hono@4.13.1)':
     dependencies:
       '@inialum/error-notification-service-javascript-sdk': 0.4.0
-      hono: 4.6.8
+      hono: 4.13.1
 
   '@inialum/error-notification-service-javascript-sdk@0.4.0':
     dependencies:
@@ -5897,7 +5910,11 @@ snapshots:
 
   he@1.2.0: {}
 
-  hono@4.6.8: {}
+  hono-idempotency@0.9.1(hono@4.13.1):
+    dependencies:
+      hono: 4.13.1
+
+  hono@4.13.1: {}
 
   hosted-git-info@2.8.9: {}
 

@@ -6,6 +6,11 @@ export default defineConfig({
 	test: {
 		globals: true,
 		environment: 'miniflare',
+		environmentOptions: {
+			bindings: {
+				ENVIRONMENT: 'test',
+			},
+		},
 	},
 	resolve: {
 		alias: [

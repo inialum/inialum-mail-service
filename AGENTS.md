@@ -27,7 +27,7 @@ This file provides guidance for coding agents working in this repository.
 
 ### Email Delivery Flow
 
-- `POST /api/v1/send`: send a single email via AWS SES (SDK default retries allowed)
+- `POST /api/v1/send`: send a single email via AWS SES (SDK default retries allowed). Optional `Idempotency-Key` enables synchronous D1-backed idempotency through `hono-idempotency` and a thin stale-lock wrapper; its D1 store creates and manages `idempotency_keys` automatically, while a missing key keeps the legacy path
 - `POST /api/v1/send-multiple`: accept an async campaign and enqueue up to `RECIPIENTS_PER_CHUNK` (40) recipients per queue message
 - Queue consumer: `max_batch_size=1`, SES SDK `maxAttempts=1`, paced at `~8/sec` (`SEND_INTERVAL_MS=125`)
 - Retry policy: recipient-level continuation messages; invocation budget exhaustion retries the same queue message without consuming recipient attempts, preserving `max_retries` and moving exhausted messages to the failed-message holding queue (Dead Letter Queue, DLQ)
