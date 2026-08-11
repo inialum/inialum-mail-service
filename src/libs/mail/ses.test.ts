@@ -69,6 +69,22 @@ describe('sendEmailWithSES', () => {
 		})
 	})
 
+	test('passes an abort signal to the AWS SDK request', async () => {
+		SESv2Mock.on(SendEmailCommand).resolves({
+			$metadata: { httpStatusCode: 200 },
+		})
+		const abortController = new AbortController()
+
+		await sendEmailWithSES(mailConfig, credentials, undefined, {
+			abortSignal: abortController.signal,
+		})
+
+		const sendArgs = SESv2Mock.calls()[0]?.args as unknown[]
+		expect(sendArgs[1]).toEqual({
+			abortSignal: abortController.signal,
+		})
+	})
+
 	test('Should throw SESApiError', async () => {
 		SESv2Mock.on(SendEmailCommand).resolves({
 			$metadata: {

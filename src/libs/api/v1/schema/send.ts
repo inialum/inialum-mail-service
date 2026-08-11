@@ -61,7 +61,7 @@ const ZodValidationError = z.any()
 /**
  * Schema for 400 error response of POST /send
  */
-export const SendApi400ErrorSchemaV1 = z.object({
+const SendApiValidation400ErrorSchemaV1 = z.object({
 	message: z.string().openapi({
 		example: 'Validation error',
 	}),
@@ -84,6 +84,20 @@ export const SendApi400ErrorSchemaV1 = z.object({
 		],
 	}),
 })
+
+const SendApiIdempotency400ErrorSchemaV1 = z.object({
+	error: z.literal('KEY_TOO_LONG'),
+	message: z.string().openapi({
+		example: 'Idempotency-Key must be at most 255 characters',
+	}),
+})
+
+export const SendApi400ErrorSchemaV1 = z
+	.union([
+		SendApiValidation400ErrorSchemaV1,
+		SendApiIdempotency400ErrorSchemaV1,
+	])
+	.openapi('BadRequest')
 
 /**
  * Schema for 500 error response of POST /send

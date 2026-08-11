@@ -231,4 +231,33 @@ describe('createMailIdempotencyStore', () => {
 			status: 'processing',
 		})
 	})
+
+	test('stores an ambiguous response instead of deleting its lock', async () => {
+		const database = new FakeD1Database()
+		const store = createMailIdempotencyStore(database)
+		const key = 'POST:/send:timeout'
+		await store.lock(key, {
+			key: 'timeout',
+			fingerprint: 'payload',
+			status: 'processing',
+			createdAt: Date.now(),
+		})
+
+		store.completeOnNextDelete({
+			status: 500,
+			headers: { 'content-type': 'application/json' },
+			body: '{"message":"SES request timed out"}',
+		})
+		await store.delete(key)
+
+		expect(await store.get(key)).toMatchObject({
+			status: 'completed',
+			response: {
+				status: 500,
+				body: '{"message":"SES request timed out"}',
+			},
+		})
+		await store.delete(key)
+		expect(await store.get(key)).toBeUndefined()
+	})
 })

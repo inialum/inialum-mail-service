@@ -1,4 +1,4 @@
-import type { IdempotencyStore } from 'hono-idempotency'
+import type { IdempotencyStore, StoredResponse } from 'hono-idempotency'
 import {
 	type D1DatabaseLike,
 	d1Store,
@@ -10,14 +10,20 @@ import {
 	IDEMPOTENCY_TABLE,
 } from '../../constants/idempotency'
 
+export type MailIdempotencyStore = IdempotencyStore & {
+	/** Persist an ambiguous response when hono-idempotency next requests deletion. */
+	completeOnNextDelete: (response: StoredResponse) => void
+}
+
 /**
- * D1 store for hono-idempotency with two Phase 0 extras:
+ * D1 store for hono-idempotency with three Phase 0 extras:
  * - reclaim stuck `processing` rows after the in-progress TTL (Worker kill / hang)
  * - delete TTL-expired primary keys before lock so replay expiry can reuse a key
+ * - replay an ambiguous timeout response instead of allowing an unsafe resend
  */
 export const createMailIdempotencyStore = (
 	database: D1DatabaseLike,
-): IdempotencyStore => {
+): MailIdempotencyStore => {
 	const inner = d1Store({
 		database,
 		tableName: IDEMPOTENCY_TABLE,
@@ -27,6 +33,7 @@ export const createMailIdempotencyStore = (
 	const replayThreshold = () => Date.now() - IDEMPOTENCY_REPLAY_TTL_MS
 	const processingThreshold = () => Date.now() - IDEMPOTENCY_IN_PROGRESS_TTL_MS
 	let innerInitialized = false
+	let completionOnDelete: StoredResponse | undefined
 
 	const getInnerRecord = async (key: string) => {
 		const record = await inner.get(key)
@@ -80,7 +87,18 @@ export const createMailIdempotencyStore = (
 			return inner.lock(key, record)
 		},
 		complete: (key, response) => inner.complete(key, response),
-		delete: (key) => inner.delete(key),
+		async delete(key) {
+			if (completionOnDelete) {
+				const response = completionOnDelete
+				completionOnDelete = undefined
+				await inner.complete(key, response)
+				return
+			}
+			await inner.delete(key)
+		},
 		purge: () => inner.purge(),
+		completeOnNextDelete(response) {
+			completionOnDelete = response
+		},
 	}
 }

@@ -15,17 +15,26 @@ import {
 	SendApiResponseSchemaV1,
 } from '../../../libs/api/v1/schema/send'
 import { createSendIdempotencyMiddleware } from '../../../libs/idempotency/middleware'
-import { createMailIdempotencyStore } from '../../../libs/idempotency/store'
+import {
+	createMailIdempotencyStore,
+	type MailIdempotencyStore,
+} from '../../../libs/idempotency/store'
 import { sendEmailWithSES } from '../../../libs/mail/ses'
 import type { Bindings } from '../../../types/Bindings'
 
-type SendEnv = IdempotencyEnv & { Bindings: Bindings }
+type SendEnv = IdempotencyEnv & {
+	Bindings: Bindings
+	Variables: IdempotencyEnv['Variables'] & {
+		idempotencyStore?: MailIdempotencyStore
+	}
+}
 
 const sendApiV1 = new OpenAPIHono<SendEnv>()
 
 sendApiV1.use('*', async (c, next) => {
 	const { DB } = env(c)
 	const store = createMailIdempotencyStore(DB)
+	c.set('idempotencyStore', store)
 	const middleware = createSendIdempotencyMiddleware(store)
 	// hono-idempotency fixes its Context env type instead of preserving app bindings.
 	return middleware(c as Context<IdempotencyEnv>, next)
@@ -104,17 +113,26 @@ const route = createRoute({
 	},
 })
 
+class SESRequestTimeoutError extends Error {
+	constructor(timeoutMs: number) {
+		super(`SES request timed out after ${timeoutMs}ms`)
+		this.name = 'SESRequestTimeoutError'
+	}
+}
+
 const withTimeout = async <T>(
-	promise: Promise<T>,
+	operation: (abortSignal: AbortSignal) => Promise<T>,
 	timeoutMs: number,
 ): Promise<T> => {
+	const abortController = new AbortController()
 	let timer: ReturnType<typeof setTimeout> | undefined
 	try {
 		return await Promise.race([
-			promise,
+			operation(abortController.signal),
 			new Promise<T>((_, reject) => {
 				timer = setTimeout(() => {
-					reject(new Error(`SES request timed out after ${timeoutMs}ms`))
+					reject(new SESRequestTimeoutError(timeoutMs))
+					abortController.abort()
 				}, timeoutMs)
 			}),
 		])
@@ -135,21 +153,23 @@ const sendOnce = async (
 	const { AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, ENVIRONMENT } = bindings
 
 	await withTimeout(
-		sendEmailWithSES(
-			{
-				fromAddress: data.from,
-				toAddresses: [data.to],
-				subject: data.subject,
-				body: data.body,
-			},
-			{
-				accessKeyId: AWS_ACCESS_KEY_ID,
-				secretAccessKey: AWS_SECRET_ACCESS_KEY,
-			},
-			ENVIRONMENT === 'production' || ENVIRONMENT === 'staging'
-				? undefined
-				: LOCAL_SES_API_ENDPOINT,
-		),
+		(abortSignal) =>
+			sendEmailWithSES(
+				{
+					fromAddress: data.from,
+					toAddresses: [data.to],
+					subject: data.subject,
+					body: data.body,
+				},
+				{
+					accessKeyId: AWS_ACCESS_KEY_ID,
+					secretAccessKey: AWS_SECRET_ACCESS_KEY,
+				},
+				ENVIRONMENT === 'production' || ENVIRONMENT === 'staging'
+					? undefined
+					: LOCAL_SES_API_ENDPOINT,
+				{ abortSignal },
+			),
 		IDEMPOTENCY_SES_TIMEOUT_MS,
 	)
 }
@@ -160,7 +180,18 @@ sendApiV1.openapi(
 		const data = c.req.valid('json')
 		const bindings = env(c)
 
-		await sendOnce(data, bindings)
+		try {
+			await sendOnce(data, bindings)
+		} catch (error) {
+			if (error instanceof SESRequestTimeoutError) {
+				c.var.idempotencyStore?.completeOnNextDelete({
+					status: 500,
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({ message: error.message }),
+				})
+			}
+			throw error
+		}
 		return c.json({ status: 'ok' }, 200)
 	},
 	(result, c) => {
