@@ -27,7 +27,7 @@ This file provides guidance for coding agents working in this repository.
 
 ### Email Delivery Flow
 
-- `POST /api/v1/send`: send a single email via AWS SES (SDK default retries allowed)
+- `POST /api/v1/send`: send a single email via AWS SES (SDK default retries allowed). Optional `Idempotency-Key` enables synchronous D1-backed idempotency through `hono-idempotency` and a thin stale-lock wrapper; its D1 store creates and manages `idempotency_keys` automatically, while a missing key keeps the legacy path
 - `POST /api/v1/send-multiple`: accept an async campaign and enqueue up to `RECIPIENTS_PER_CHUNK` (40) recipients per queue message
 - Queue consumer: `max_batch_size=1`, SES SDK `maxAttempts=1`, paced at `~8/sec` (`SEND_INTERVAL_MS=125`)
 - Retry policy: recipient-level continuation messages; invocation budget exhaustion retries the same queue message without consuming recipient attempts, preserving `max_retries` and moving exhausted messages to the failed-message holding queue (Dead Letter Queue, DLQ)
@@ -35,7 +35,10 @@ This file provides guidance for coding agents working in this repository.
 
 ### Storage and Logging
 
-- R2 bucket binding: `MAIL_LOGS_BUCKET` (`inialum-mail-service-logs`)
+- R2 bucket binding: `MAIL_LOGS_BUCKET`
+  - production: `inialum-mail-service-logs`
+  - staging: `inialum-mail-service-logs-staging` (do not run backfill against production from staging)
+- D1 binding: `DB` (`inialum-mail-service-db` / `-staging`) for the automatically managed `idempotency_keys` table only in Phase 0; no Phase 0 schema migration is required
 - Campaign acceptance logs and recipient failure logs are stored as JSON
 - Ops lookup paths (see README "Investigating bulk-send failures"):
   - Final recipient failures: `{env}/logs/campaigns/failures/{date}/{campaignId}-{recipient}-attempt{N}.json`
@@ -52,6 +55,7 @@ This file provides guidance for coding agents working in this repository.
 - `AWS_SECRET_ACCESS_KEY`
 - `MAIL_LOGS_BUCKET`
 - `MAIL_SEND_QUEUE`
+- `DB`
 
 ## Working Conventions
 
@@ -60,6 +64,7 @@ This file provides guidance for coding agents working in this repository.
 - Prefer minimal, focused changes and keep tests updated.
 - Communicate with the developer in Japanese.
 - Write code comments and documentation in English.
+- Vitest unit and Workers tests enable `globals`, so Vitest global API imports can be omitted.
 
 ## Change Checklist
 

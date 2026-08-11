@@ -61,7 +61,7 @@ const ZodValidationError = z.any()
 /**
  * Schema for 400 error response of POST /send
  */
-export const SendApi400ErrorSchemaV1 = z.object({
+const SendApiValidation400ErrorSchemaV1 = z.object({
 	message: z.string().openapi({
 		example: 'Validation error',
 	}),
@@ -85,6 +85,20 @@ export const SendApi400ErrorSchemaV1 = z.object({
 	}),
 })
 
+const SendApiIdempotency400ErrorSchemaV1 = z.object({
+	error: z.literal('KEY_TOO_LONG'),
+	message: z.string().openapi({
+		example: 'Idempotency-Key must be at most 255 characters',
+	}),
+})
+
+export const SendApi400ErrorSchemaV1 = z
+	.union([
+		SendApiValidation400ErrorSchemaV1,
+		SendApiIdempotency400ErrorSchemaV1,
+	])
+	.openapi('BadRequest')
+
 /**
  * Schema for 500 error response of POST /send
  */
@@ -93,3 +107,27 @@ export const SendApi500ErrorSchemaV1 = z.object({
 		example: 'Internal server error',
 	}),
 })
+
+/**
+ * Schema for 409 idempotency conflicts on POST /send
+ */
+export const SendApi409ErrorSchemaV1 = z
+	.object({
+		error: z.literal('idempotency_in_progress'),
+		message: z.string().openapi({
+			example: 'A request with this Idempotency-Key is already in progress',
+		}),
+	})
+	.openapi('IdempotencyInProgress')
+
+/**
+ * Schema for 422 payload mismatch errors on POST /send
+ */
+export const SendApi422ErrorSchemaV1 = z
+	.object({
+		error: z.literal('idempotency_payload_mismatch'),
+		message: z.string().openapi({
+			example: 'Idempotency-Key was reused with a different request payload',
+		}),
+	})
+	.openapi('IdempotencyPayloadMismatch')
