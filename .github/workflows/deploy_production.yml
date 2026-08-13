@@ -40,7 +40,7 @@ jobs:
         with:
           step: start
           token: ${{ secrets.GITHUB_TOKEN }}
-          env: Production
+          env: production
 
       - name: Deploy to Cloudflare Workers
         run: pnpm run deploy:production
