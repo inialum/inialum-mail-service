@@ -38,11 +38,9 @@ describe('wrangler Free + staging isolation contract', () => {
 	})
 
 	test('production and staging each bind a dedicated D1 database', () => {
-		expect(wrangler.d1_databases[0]?.database_name).toBe(
-			'inialum-mail-service-db',
-		)
+		expect(wrangler.d1_databases[0]?.database_name).toBe('inialum-mail-db')
 		expect(wrangler.env.staging.d1_databases[0]?.database_name).toBe(
-			'inialum-mail-service-db-staging',
+			'inialum-mail-db-staging',
 		)
 		expect(wrangler.env.staging.d1_databases[0]?.database_id).not.toBe(
 			wrangler.d1_databases[0]?.database_id,

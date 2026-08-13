@@ -20,8 +20,8 @@
 	"d1_databases": [
 		{
 			"binding": "DB",
-			"database_name": "inialum-mail-service-db",
-			"database_id": "9d07a540-6cdc-4634-a66b-e31f53a8dd18"
+			"database_name": "inialum-mail-db",
+			"database_id": "2b18e3f5-d73b-4b5f-aef7-95ab45de15bc"
 		}
 	],
 	"queues": {
@@ -59,8 +59,8 @@
 			"d1_databases": [
 				{
 					"binding": "DB",
-					"database_name": "inialum-mail-service-db-staging",
-					"database_id": "3fbe161c-d18e-482e-a8e6-938d73e7d295"
+					"database_name": "inialum-mail-db-staging",
+					"database_id": "8a29e93e-84cc-4d0f-9401-e599e3008d5d"
 				}
 			],
 			"queues": {
