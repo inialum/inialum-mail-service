@@ -42,7 +42,7 @@ jobs:
         with:
           step: start
           token: ${{ secrets.GITHUB_TOKEN }}
-          env: mail (staging)
+          env: staging
 
       - name: Deploy to Cloudflare Workers
         run: pnpm run deploy:staging
