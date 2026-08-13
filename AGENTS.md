@@ -20,7 +20,7 @@ This file provides guidance for coding agents working in this repository.
 ## Architecture Overview
 
 - Runtime: Cloudflare Workers + Hono
-- Deployment: GitHub Actions (`staging` branch -> staging, `main` branch -> production)
+- Deployment: GitHub Actions (`main` branch -> production; staging is manual `workflow_dispatch` on the selected ref)
 - Auth: JWT middleware on `/api/*`
 - OpenAPI: served at `/schema/v1`
 - Plan: Workers Free (external subrequests 50 / invocation)
@@ -38,7 +38,7 @@ This file provides guidance for coding agents working in this repository.
 - R2 bucket binding: `MAIL_LOGS_BUCKET`
   - production: `inialum-mail-service-logs`
   - staging: `inialum-mail-service-logs-staging` (do not run backfill against production from staging)
-- D1 binding: `DB` (`inialum-mail-service-db` / `-staging`) for the automatically managed `idempotency_keys` table only in Phase 0; no Phase 0 schema migration is required
+- D1 binding: `DB` (`inialum-mail-db` / `-staging`) for the automatically managed `idempotency_keys` table only in Phase 0; no Phase 0 schema migration is required
 - Campaign acceptance logs and recipient failure logs are stored as JSON
 - Ops lookup paths (see README "Investigating bulk-send failures"):
   - Final recipient failures: `{env}/logs/campaigns/failures/{date}/{campaignId}-{recipient}-attempt{N}.json`
@@ -65,6 +65,11 @@ This file provides guidance for coding agents working in this repository.
 - Communicate with the developer in Japanese.
 - Write code comments and documentation in English.
 - Vitest unit and Workers tests enable `globals`, so Vitest global API imports can be omitted.
+
+## Prohibitions
+
+- **Never deploy to production** (`pnpm run deploy:production`, `wrangler deploy` without `--env staging`, merging/pushing to trigger production deploy, or any equivalent) unless the user gives **extremely explicit** permission in the current turn (for example: "deploy production" / "本番をデプロイして"). Plan approval, staging deploy, "implement the plan", cutover checklists, or implied rollout language is **not** enough.
+- Do not delete production Cloudflare resources (D1, R2, Queues, Workers) without the same kind of explicit permission.
 
 ## Change Checklist
 
