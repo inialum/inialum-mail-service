@@ -97,7 +97,7 @@ Notes:
 ## Deployment
 
 This service is deployed to [Cloudflare Workers](https://workers.cloudflare.com) using GitHub Actions. When a new commit is pushed to `main` branch, the service will be automatically deployed.  
-If you want to deploy to the staging environment, push the commit to `staging` branch. (`@inialum/inialum-dev` will handle this)
+Staging deploys run only through manual `workflow_dispatch` of **Deploy for staging** (selected workflow ref), after Test CI passes.
 
 ## License
 

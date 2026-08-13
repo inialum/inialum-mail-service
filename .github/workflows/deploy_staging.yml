@@ -1,31 +1,31 @@
 name: Deploy for staging
 
 on:
-  workflow_run:
-    workflows: ['Test']
-    branches: [staging]
-    types:
-      - completed
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
 
 jobs:
+  test_ci:
+    name: Run Test CI
+    uses: ./.github/workflows/test.yml
+
   deploy:
+    needs: test_ci
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: read
       deployments: write
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: staging
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: latest
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -42,7 +42,7 @@ jobs:
         with:
           step: start
           token: ${{ secrets.GITHUB_TOKEN }}
-          env: Staging
+          env: mail (staging)
 
       - name: Deploy to Cloudflare Workers
         run: pnpm run deploy:staging
