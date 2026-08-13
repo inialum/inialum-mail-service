@@ -20,7 +20,7 @@ This file provides guidance for coding agents working in this repository.
 ## Architecture Overview
 
 - Runtime: Cloudflare Workers + Hono
-- Deployment: GitHub Actions (`main` branch -> production; staging is manual `workflow_dispatch` on the selected ref)
+- Deployment: GitHub Actions (`main` branch -> production; staging is manual `workflow_dispatch` on the selected ref, then the `staging` GitHub Environment)
 - Auth: JWT middleware on `/api/*`
 - OpenAPI: served at `/schema/v1`
 - Plan: Workers Free (external subrequests 50 / invocation)

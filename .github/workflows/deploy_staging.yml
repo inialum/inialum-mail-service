@@ -15,6 +15,7 @@ jobs:
   deploy:
     needs: test_ci
     runs-on: ubuntu-latest
+    environment: staging
     timeout-minutes: 5
     permissions:
       contents: read

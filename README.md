@@ -97,7 +97,7 @@ Notes:
 ## Deployment
 
 This service is deployed to [Cloudflare Workers](https://workers.cloudflare.com) using GitHub Actions. When a new commit is pushed to `main` branch, the service will be automatically deployed.  
-Staging deploys run only through manual `workflow_dispatch` of **Deploy for staging** (selected workflow ref), after Test CI passes.
+Staging deploys run only through manual `workflow_dispatch` of **Deploy for staging** (selected workflow ref), after Test CI passes. The deploy job uses the GitHub Environment `staging`; required reviewers are configured in the repo Environment settings, not in the workflow file.
 
 ## License
 
