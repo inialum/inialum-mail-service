@@ -4,6 +4,9 @@
 	"compatibility_date": "2026-02-24",
 	"compatibility_flags": ["nodejs_compat"],
 	"workers_dev": false,
+	"placement": {
+		"region": "aws:ap-northeast-1"
+	},
 	"vars": {
 		"ENVIRONMENT": "production"
 	},
@@ -47,6 +50,9 @@
 		"staging": {
 			"name": "inialum-mail-service-staging",
 			"workers_dev": true,
+			"placement": {
+				"region": "aws:ap-northeast-1"
+			},
 			"vars": {
 				"ENVIRONMENT": "staging"
 			},
