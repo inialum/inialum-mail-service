@@ -52,6 +52,23 @@ vi.mock('../../../libs/mail/ses', () => {
 	}
 })
 
+vi.mock('../../../libs/distribution/syncSend', () => {
+	return {
+		createSyncDistribution: vi.fn(async () => ({
+			distributionId: 'dst_test',
+			campaignId: 'cmp_test',
+		})),
+		finalizeSyncDistribution: vi.fn(),
+	}
+})
+
+vi.mock('../../../libs/distribution/indexRecipient', () => {
+	return {
+		getExistingSentOutcome: vi.fn(async () => null),
+		finalizeRecipientDelivery: vi.fn(),
+	}
+})
+
 vi.mock('../../../libs/idempotency/store', () => {
 	return {
 		createMailIdempotencyStore: () => {

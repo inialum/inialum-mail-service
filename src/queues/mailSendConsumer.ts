@@ -4,6 +4,10 @@ import {
 	QUEUE_CONSUMER_MAX_RETRIES,
 	QUEUE_CONSUMER_SES_MAX_ATTEMPTS,
 } from '../constants/mail'
+import {
+	finalizeRecipientDelivery,
+	getExistingSentOutcome,
+} from '../libs/distribution/indexRecipient'
 import { reportQueueError } from '../libs/error/reportQueueError'
 import {
 	getCampaignChunkProgress,
@@ -53,9 +57,46 @@ const isMailQueueMessage = (value: unknown): value is MailQueueMessage => {
 	return (
 		typeof message.campaignId === 'string' &&
 		typeof message.chunkIndex === 'number' &&
+		(message.distributionId === undefined ||
+			typeof message.distributionId === 'string') &&
 		Array.isArray(message.recipients) &&
 		message.recipients.every((recipient) => typeof recipient === 'string')
 	)
+}
+
+const recordDeliveryHistory = async (
+	bindings: Bindings,
+	campaignId: string,
+	recipient: string,
+	result: {
+		status: 'sent' | 'failed'
+		providerMessageId?: string
+		error?: string
+		attempts: number
+		duplicatePossible?: boolean
+	},
+) => {
+	try {
+		await finalizeRecipientDelivery({
+			database: bindings.DB,
+			bucket: bindings.MAIL_LOGS_BUCKET,
+			environment: bindings.ENVIRONMENT,
+			campaignId,
+			email: recipient,
+			status: result.status,
+			providerMessageId: result.providerMessageId,
+			error: result.error,
+			attempts: result.attempts,
+			duplicatePossible: result.duplicatePossible,
+		})
+	} catch (error) {
+		logQueueEvent('mail_history.finalize_failed', {
+			campaignId,
+			recipient,
+			status: result.status,
+			error: error instanceof Error ? error.message : String(error),
+		})
+	}
 }
 
 const buildNextChunkProgress = (
@@ -380,27 +421,61 @@ export const handleMailSendQueue = async (
 			) {
 				const recipient = message.body.recipients[recipientOffset]
 				let didSendRecipient = false
+				let alreadySent = null as Awaited<
+					ReturnType<typeof getExistingSentOutcome>
+				>
 
 				try {
-					await sendEmailWithSES(
-						{
-							fromAddress: manifest.from,
-							toAddresses: [recipient],
-							subject: manifest.subject,
-							body: manifest.body,
-						},
-						{
-							accessKeyId: bindings.AWS_ACCESS_KEY_ID,
-							secretAccessKey: bindings.AWS_SECRET_ACCESS_KEY,
-						},
-						endpoint,
-						{
-							maxAttempts: QUEUE_CONSUMER_SES_MAX_ATTEMPTS,
-						},
-					)
+					alreadySent = await getExistingSentOutcome({
+						database: bindings.DB,
+						bucket: bindings.MAIL_LOGS_BUCKET,
+						environment: bindings.ENVIRONMENT,
+						campaignId: message.body.campaignId,
+						email: recipient,
+					})
+				} catch (error) {
+					logQueueEvent('mail_history.lookup_failed', {
+						campaignId: message.body.campaignId,
+						recipient,
+						error: error instanceof Error ? error.message : String(error),
+					})
+				}
 
-					didSendRecipient = true
-					summary.succeeded += 1
+				try {
+					if (alreadySent) {
+						didSendRecipient = true
+						summary.succeeded += 1
+					} else {
+						const ses = await sendEmailWithSES(
+							{
+								fromAddress: manifest.from,
+								toAddresses: [recipient],
+								subject: manifest.subject,
+								body: manifest.body,
+							},
+							{
+								accessKeyId: bindings.AWS_ACCESS_KEY_ID,
+								secretAccessKey: bindings.AWS_SECRET_ACCESS_KEY,
+							},
+							endpoint,
+							{
+								maxAttempts: QUEUE_CONSUMER_SES_MAX_ATTEMPTS,
+							},
+						)
+
+						await recordDeliveryHistory(
+							bindings,
+							message.body.campaignId,
+							recipient,
+							{
+								status: 'sent',
+								providerMessageId: ses.MessageId,
+								attempts: 1,
+							},
+						)
+						didSendRecipient = true
+						summary.succeeded += 1
+					}
 				} catch (error) {
 					const resolvedError = toError(error)
 
@@ -507,6 +582,16 @@ export const handleMailSendQueue = async (
 						error: resolvedError.message,
 						notification_failed: !notificationSucceeded,
 					})
+					await recordDeliveryHistory(
+						bindings,
+						message.body.campaignId,
+						recipient,
+						{
+							status: 'failed',
+							error: resolvedError.message,
+							attempts: currentRecipientAttempts,
+						},
+					)
 					await saveCampaignChunkProgress(
 						bindings.MAIL_LOGS_BUCKET,
 						buildNextChunkProgress(

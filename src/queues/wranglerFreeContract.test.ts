@@ -46,4 +46,15 @@ describe('wrangler Free + staging isolation contract', () => {
 			wrangler.d1_databases[0]?.database_id,
 		)
 	})
+
+	test('history migrations and staging cron stay on isolated resources', () => {
+		expect(wrangler.d1_databases[0]?.migrations_dir).toBe('migrations')
+		expect(wrangler.env.staging.d1_databases[0]?.migrations_dir).toBe(
+			'migrations',
+		)
+		expect(wrangler.triggers?.crons).toEqual(['0 17 * * *'])
+		expect(wrangler.env.staging.triggers?.crons).toEqual(['0 17 * * *'])
+		expect(wrangler.vars.BACKFILL_DRY_RUN).toBe('true')
+		expect(wrangler.env.staging.vars.BACKFILL_DRY_RUN).toBe('true')
+	})
 })

@@ -1,7 +1,6 @@
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
 import { env } from 'hono/adapter'
 
-import { RECIPIENTS_PER_CHUNK } from '../../../constants/mail'
 import {
 	SendApi400ErrorSchemaV1,
 	SendApi500ErrorSchemaV1,
@@ -12,82 +11,12 @@ import {
 	SendMultipleStatusApi404ErrorSchemaV1,
 	SendMultipleStatusApiResponseSchemaV1,
 } from '../../../libs/api/v1/schema/sendMultiple'
-import {
-	getCampaignStatus,
-	saveCampaignChunkProgress,
-	saveCampaignManifest,
-	saveCampaignStatus,
-	updateCampaignStatus,
-} from '../../../libs/mail/campaignStore'
-import {
-	generateMessageId,
-	saveCampaignAcceptedLog,
-	saveMailLogToR2,
-} from '../../../libs/mail/r2Logger'
+import { acceptDistribution } from '../../../libs/distribution/accept'
+import { getCampaignStatus } from '../../../libs/mail/campaignStore'
+import { generateMessageId } from '../../../libs/mail/r2Logger'
 import type { Bindings } from '../../../types/Bindings'
-import type {
-	MailCampaignChunkProgress,
-	MailCampaignManifest,
-	MailCampaignStatus,
-} from '../../../types/MailCampaign'
-import type { MailQueueMessage } from '../../../types/MailQueueMessage'
 
 const sendMultipleApiV1 = new OpenAPIHono<{ Bindings: Bindings }>()
-
-const dedupeRecipients = (recipients: string[]) => {
-	const seen = new Set<string>()
-	const deduped: string[] = []
-
-	for (const recipient of recipients) {
-		const normalized = recipient.trim()
-		const key = normalized.toLowerCase()
-
-		if (seen.has(key)) {
-			continue
-		}
-
-		seen.add(key)
-		deduped.push(normalized)
-	}
-
-	return deduped
-}
-
-const chunkRecipients = (recipients: string[], size: number) => {
-	const chunks: string[][] = []
-
-	for (let index = 0; index < recipients.length; index += size) {
-		chunks.push(recipients.slice(index, index + size))
-	}
-
-	return chunks
-}
-
-const createInitialCampaignStatus = (
-	manifest: MailCampaignManifest,
-): MailCampaignStatus => ({
-	environment: manifest.environment,
-	campaignId: manifest.campaignId,
-	status: 'accepted',
-	requestedRecipients: manifest.requestedRecipients,
-	uniqueRecipients: manifest.uniqueRecipients,
-	processedRecipients: 0,
-	sentRecipients: 0,
-	failedRecipients: 0,
-	createdAt: manifest.createdAt,
-})
-
-const createInitialChunkProgress = (
-	environment: string,
-	campaignId: string,
-	chunkIndex: number,
-): MailCampaignChunkProgress => ({
-	environment,
-	campaignId,
-	chunkIndex,
-	nextRecipientOffset: 0,
-	currentRecipientAttempts: 0,
-})
 
 const postRoute = createRoute({
 	method: 'post',
@@ -166,116 +95,27 @@ const getRoute = createRoute({
 sendMultipleApiV1.openapi(
 	postRoute,
 	async (c) => {
-		const { ENVIRONMENT, MAIL_SEND_QUEUE, MAIL_LOGS_BUCKET } = env(c)
-		const campaignId = generateMessageId()
 		const data = c.req.valid('json')
-		const timestamp = new Date().toISOString()
-		const dedupedRecipients = dedupeRecipients(data.to)
-		const recipientChunks = chunkRecipients(
-			dedupedRecipients,
-			RECIPIENTS_PER_CHUNK,
-		)
-
-		const manifest: MailCampaignManifest = {
-			environment: ENVIRONMENT,
-			campaignId,
-			createdAt: timestamp,
+		const campaignId = generateMessageId()
+		const accepted = await acceptDistribution(env(c), {
+			kind: 'transactional',
+			source: 'send-multiple',
 			from: data.from,
 			subject: data.subject,
 			body: data.body,
-			recipients: dedupedRecipients,
+			recipients: data.to.map((email) => ({ email })),
 			requestedRecipients: data.to.length,
-			uniqueRecipients: dedupedRecipients.length,
-			chunkCount: recipientChunks.length,
-		}
+			campaignId,
+			enqueue: true,
+		})
 
-		try {
-			await saveCampaignManifest(MAIL_LOGS_BUCKET, manifest)
-			await saveCampaignStatus(
-				MAIL_LOGS_BUCKET,
-				createInitialCampaignStatus(manifest),
-			)
-
-			for (const [chunkIndex] of recipientChunks.entries()) {
-				await saveCampaignChunkProgress(
-					MAIL_LOGS_BUCKET,
-					createInitialChunkProgress(ENVIRONMENT, campaignId, chunkIndex),
-				)
-			}
-
-			const queueMessages: MailQueueMessage[] = recipientChunks.map(
-				(recipients, chunkIndex) => ({
-					campaignId,
-					chunkIndex,
-					recipients,
-				}),
-			)
-
-			await MAIL_SEND_QUEUE.sendBatch(
-				queueMessages.map((message) => ({
-					body: message,
-					contentType: 'json',
-				})),
-			)
-
-			try {
-				await saveCampaignAcceptedLog(MAIL_LOGS_BUCKET, {
-					environment: ENVIRONMENT,
-					campaignId,
-					timestamp,
-					from: data.from,
-					subject: data.subject,
-					requestedRecipients: data.to.length,
-					uniqueRecipients: dedupedRecipients.length,
-					queuedRecipients: dedupedRecipients.length,
-				})
-			} catch (logError) {
-				console.error('Failed to save success log to R2:', logError)
-			}
-
-			return c.json(
-				{
-					status: 'accepted' as const,
-					campaignId,
-				},
-				202,
-			)
-		} catch (error) {
-			try {
-				await updateCampaignStatus(
-					MAIL_LOGS_BUCKET,
-					ENVIRONMENT,
-					campaignId,
-					(current) => ({
-						...current,
-						status: 'failed',
-						completedAt: new Date().toISOString(),
-					}),
-				)
-			} catch (statusError) {
-				console.error(
-					'Failed to update campaign status to failed:',
-					statusError,
-				)
-			}
-
-			try {
-				await saveMailLogToR2(MAIL_LOGS_BUCKET, {
-					environment: ENVIRONMENT,
-					timestamp,
-					from: data.from,
-					to: dedupedRecipients,
-					subject: data.subject,
-					status: 'error',
-					messageId: campaignId,
-					error: error instanceof Error ? error.message : String(error),
-				})
-			} catch (logError) {
-				console.error('Failed to save error log to R2:', logError)
-			}
-
-			throw error
-		}
+		return c.json(
+			{
+				status: 'accepted' as const,
+				campaignId: accepted.campaignIds[0] ?? campaignId,
+			},
+			202,
+		)
 	},
 	(result, c) => {
 		if (!result.success) {

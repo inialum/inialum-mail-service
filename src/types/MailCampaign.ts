@@ -6,6 +6,7 @@ export type MailCampaignBody = {
 export type MailCampaignManifest = {
 	environment: string
 	campaignId: string
+	distributionId?: string
 	createdAt: string
 	from: string
 	subject: string

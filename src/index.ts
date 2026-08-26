@@ -10,6 +10,7 @@ import {
 	ERROR_NOTIFICATION_TIMEOUT_MS,
 	ORIGINS,
 } from './constants/config'
+import { handleScheduled } from './libs/scheduled/run'
 import { handleMailSendQueue } from './queues/mailSendConsumer'
 import { api } from './routes/api'
 import type { Bindings } from './types/Bindings'
@@ -71,7 +72,7 @@ app.doc('/schema/v1', {
 	],
 })
 
-app.openAPIRegistry.registerComponent('securitySchemes', 'bearerAuth', {
+app.openAPIRegistry.registerComponent('securitySchemes', 'Bearer', {
 	type: 'http',
 	scheme: 'bearer',
 	bearerFormat: 'JWT',
@@ -81,6 +82,10 @@ app.openAPIRegistry.registerComponent('securitySchemes', 'bearerAuth', {
 const handler: ExportedHandler<Bindings, MailQueueMessage> = {
 	fetch: app.fetch,
 	queue: (batch, bindings) => handleMailSendQueue(batch, bindings),
+	scheduled: (_controller, bindings, ctx) => {
+		ctx.waitUntil(handleScheduled(bindings))
+	},
 }
 
 export default handler
+export { app }

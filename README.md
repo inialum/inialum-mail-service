@@ -51,6 +51,21 @@ pnpm run test:coverage
 
 OpenAPI Specification (OAS) is a standard, language-agnostic interface to RESTful APIs. This service uses OAS to describe its API and it is powered by [Zod OpenAPI Hono](https://github.com/honojs/middleware/tree/main/packages/zod-openapi). The service hosts the OAS file on `/schema/v1` endpoint.
 
+History endpoints live under `/api/v1/distributions` (JWT). `POST /api/v1/send` and `POST /api/v1/send-multiple` keep their existing response contracts and write into the same history tables.
+
+### D1 history schema
+
+History tables are generated from `src/db/schema.ts` with Drizzle:
+
+```shell
+pnpm run db:generate
+pnpm run db:migrate
+```
+
+Do not hand-edit files under `migrations/`. Local `wrangler d1 execute --local` cannot run while `wrangler dev` has the SQLite file locked.
+
+Scheduled jobs (`0 17 * * *`) reconcile R2 outcomes into D1, optionally backfill legacy `{env}/state/campaigns/` objects as `source: legacy-bulk` (dry-run unless `BACKFILL_DRY_RUN=false`), delete history older than one year, and purge expired idempotency keys. Staging uses `inialum-mail-service-logs-staging` only.
+
 ### Tips
 
 If you want to generate authentication token to request API of this service, you can use this command
@@ -68,7 +83,9 @@ Bulk send (`POST /api/v1/send-multiple`) writes campaign state and failure evide
 | What you want | Where to look |
 | --- | --- |
 | Which recipient finally failed | `{env}/logs/campaigns/failures/{YYYY-MM-DD}/{campaignId}-{recipient}-attempt{N}.json` |
-| Campaign totals (sent / failed) | `{env}/state/campaigns/{campaignId}/status.json` |
+| Campaign totals (sent / failed) | `{env}/state/campaigns/{campaignId}/status.json` or `GET /api/v1/distributions/:id` |
+| Recipient terminal result | `{env}/outcomes/{campaignId}/{recipientId}.json` |
+| Distribution body | `{env}/state/distributions/{distributionId}/manifest.json` |
 | Where a chunk stopped | `{env}/state/campaigns/{campaignId}/chunks/{chunkIndex}.json` (`nextRecipientOffset`) + recipients in `manifest.json` |
 | Campaign accepted | `{env}/logs/campaigns/accepted/{YYYY-MM-DD}/{campaignId}.json` |
 

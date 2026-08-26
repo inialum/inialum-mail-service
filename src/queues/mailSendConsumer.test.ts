@@ -1,4 +1,8 @@
 import { LOCAL_SES_API_ENDPOINT } from '../constants/mail'
+import {
+	finalizeRecipientDelivery,
+	getExistingSentOutcome,
+} from '../libs/distribution/indexRecipient'
 import { reportQueueError } from '../libs/error/reportQueueError'
 import {
 	getCampaignChunkProgress,
@@ -51,6 +55,13 @@ vi.mock('../libs/mail/campaignStore', () => {
 vi.mock('../libs/mail/r2Logger', () => {
 	return {
 		saveRecipientFailureLog: vi.fn(),
+	}
+})
+
+vi.mock('../libs/distribution/indexRecipient', () => {
+	return {
+		finalizeRecipientDelivery: vi.fn(),
+		getExistingSentOutcome: vi.fn(),
 	}
 })
 
@@ -147,6 +158,13 @@ describe('handleMailSendQueue', () => {
 		vi.mocked(saveRecipientFailureLog).mockReset()
 		vi.mocked(reportQueueError).mockReset()
 		vi.mocked(reportQueueError).mockResolvedValue(true)
+		vi.mocked(finalizeRecipientDelivery).mockReset()
+		vi.mocked(getExistingSentOutcome).mockReset()
+		vi.mocked(getExistingSentOutcome).mockResolvedValue(null)
+		vi.mocked(finalizeRecipientDelivery).mockResolvedValue({
+			indexed: false,
+			skippedSend: false,
+		})
 
 		vi.mocked(getCampaignManifest).mockResolvedValue(baseManifest)
 		vi.mocked(getCampaignChunkProgress).mockResolvedValue(baseProgress)
@@ -204,6 +222,26 @@ describe('handleMailSendQueue', () => {
 		expect(message.retry).not.toHaveBeenCalled()
 		expect(queueSendMock).not.toHaveBeenCalled()
 		expect(vi.mocked(reportQueueError)).not.toHaveBeenCalled()
+		expect(vi.mocked(finalizeRecipientDelivery)).toHaveBeenCalledWith(
+			expect.objectContaining({
+				status: 'sent',
+				email: 'user@example.com',
+			}),
+		)
+	})
+
+	test('does not resend when an immutable sent outcome already exists', async () => {
+		vi.mocked(getExistingSentOutcome).mockResolvedValueOnce({
+			row: { id: 'rcp_1' },
+			outcome: { status: 'sent' },
+		} as never)
+		const message = createMessage(baseMessageBody)
+		const batch = createBatch([message])
+
+		await handleMailSendQueue(batch, bindings, 0)
+
+		expect(vi.mocked(sendEmailWithSES)).not.toHaveBeenCalled()
+		expect(message.ack).toHaveBeenCalledTimes(1)
 	})
 
 	test('should fail campaign without retrying when bookkeeping fails after send', async () => {
@@ -411,7 +449,7 @@ describe('handleMailSendQueue', () => {
 		const localBindings = {
 			...bindings,
 			ENVIRONMENT: 'local',
-		} as Bindings
+		} as unknown as Bindings
 
 		await handleMailSendQueue(batch, localBindings, 0)
 
