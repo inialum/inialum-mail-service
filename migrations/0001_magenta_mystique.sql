@@ -1,0 +1,1 @@
+ALTER TABLE `distributions` ADD `acceptance_completed_at` text;

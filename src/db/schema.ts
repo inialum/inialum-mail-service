@@ -35,6 +35,7 @@ export const distributions = sqliteTable(
 		sentRecipients: integer('sent_recipients').notNull().default(0),
 		failedRecipients: integer('failed_recipients').notNull().default(0),
 		idempotencyKey: text('idempotency_key'),
+		acceptanceCompletedAt: text('acceptance_completed_at'),
 		createdAt: text('created_at').notNull(),
 		startedAt: text('started_at'),
 		completedAt: text('completed_at'),

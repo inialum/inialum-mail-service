@@ -74,6 +74,13 @@ type AcceptBindings = {
 
 const emptyBatchError = new Error('D1 batch requires at least one statement')
 
+export class DistributionAcceptanceIncompleteError extends Error {
+	constructor(distributionId: string) {
+		super(`Distribution acceptance is incomplete: ${distributionId}`)
+		this.name = 'DistributionAcceptanceIncompleteError'
+	}
+}
+
 type MailBatchStatement = BatchItem<'sqlite'>
 
 const runBatches = async (db: MailDb, statements: MailBatchStatement[]) => {
@@ -173,6 +180,16 @@ export const acceptDistribution = async (
 	try {
 		await runBatches(db, statements)
 	} catch (error) {
+		const [partial] = await db
+			.select({ id: distributions.id })
+			.from(distributions)
+			.where(eq(distributions.id, distributionId))
+			.limit(1)
+		if (partial) {
+			await db.delete(distributions).where(eq(distributions.id, distributionId))
+			throw error
+		}
+
 		if (input.idempotencyKey) {
 			const [existing] = await db
 				.select()
@@ -180,6 +197,10 @@ export const acceptDistribution = async (
 				.where(eq(distributions.idempotencyKey, input.idempotencyKey))
 				.limit(1)
 			if (existing) {
+				if (!existing.acceptanceCompletedAt) {
+					throw new DistributionAcceptanceIncompleteError(existing.id)
+				}
+
 				const existingCampaigns = await db
 					.select({ id: campaigns.id })
 					.from(campaigns)
@@ -196,31 +217,36 @@ export const acceptDistribution = async (
 		throw error
 	}
 
-	await saveDistributionManifest(bindings.MAIL_LOGS_BUCKET, {
-		environment: bindings.ENVIRONMENT,
-		distributionId,
-		createdAt: timestamp,
-		from: input.from,
-		subject: input.subject,
-		body: input.body,
-		kind: input.kind,
-		source: input.source,
-		actor: input.actor,
-		subscriptionKind: input.subscriptionKind,
-		audienceSnapshot: input.audienceSnapshot,
-	})
-
-	if (!input.enqueue) {
-		return {
-			distributionId,
-			campaignIds: campaignRows.map((campaign) => campaign.campaignId),
-			uniqueRecipients: uniqueRecipients.length,
-			requestedRecipients,
-			status: 'accepted',
-		}
-	}
-
 	try {
+		await saveDistributionManifest(bindings.MAIL_LOGS_BUCKET, {
+			environment: bindings.ENVIRONMENT,
+			distributionId,
+			createdAt: timestamp,
+			from: input.from,
+			subject: input.subject,
+			body: input.body,
+			kind: input.kind,
+			source: input.source,
+			actor: input.actor,
+			subscriptionKind: input.subscriptionKind,
+			audienceSnapshot: input.audienceSnapshot,
+		})
+
+		if (!input.enqueue) {
+			await db
+				.update(distributions)
+				.set({ acceptanceCompletedAt: new Date().toISOString() })
+				.where(eq(distributions.id, distributionId))
+
+			return {
+				distributionId,
+				campaignIds: campaignRows.map((campaign) => campaign.campaignId),
+				uniqueRecipients: uniqueRecipients.length,
+				requestedRecipients,
+				status: 'accepted',
+			}
+		}
+
 		for (const campaign of campaignRows) {
 			await saveCampaignManifest(bindings.MAIL_LOGS_BUCKET, {
 				environment: bindings.ENVIRONMENT,
@@ -279,6 +305,11 @@ export const acceptDistribution = async (
 				})),
 			)
 		}
+
+		await db
+			.update(distributions)
+			.set({ acceptanceCompletedAt: new Date().toISOString() })
+			.where(eq(distributions.id, distributionId))
 
 		try {
 			await saveCampaignAcceptedLog(bindings.MAIL_LOGS_BUCKET, {
