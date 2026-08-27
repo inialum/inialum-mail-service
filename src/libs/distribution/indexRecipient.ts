@@ -1,9 +1,8 @@
-import { and, eq, sql } from 'drizzle-orm'
+import { and, eq, exists, sql } from 'drizzle-orm'
 
 import { createDb } from '../../db'
 import { campaigns, distributions, recipients } from '../../db/schema'
 import type { RecipientStatus } from '../../db/values'
-import { resolveCampaignStatus } from '../mail/campaignStore'
 import {
 	getRecipientOutcome,
 	type RecipientOutcome,
@@ -53,27 +52,16 @@ const applyTerminalStatus = async (
 	},
 ) => {
 	const db = createDb(database)
-	const updated = await db
-		.update(recipients)
-		.set({
-			status: next.status,
-			providerMessageId: next.providerMessageId,
-			lastError: next.lastError,
-			attemptCount: next.attemptCount,
-			duplicatePossible: next.duplicatePossible,
-			updatedAt: next.timestamp,
-		})
-		.where(and(eq(recipients.id, row.id), eq(recipients.status, 'pending')))
-		.returning({ id: recipients.id })
-
-	if (updated.length === 0) {
-		return
-	}
-
 	const sentDelta = next.status === 'sent' ? 1 : 0
 	const failedDelta = next.status === 'failed' ? 1 : 0
+	const recipientIsPending = exists(
+		db
+			.select({ id: recipients.id })
+			.from(recipients)
+			.where(and(eq(recipients.id, row.id), eq(recipients.status, 'pending'))),
+	)
 
-	await db.batch([
+	const [, , updated] = await db.batch([
 		db
 			.update(campaigns)
 			.set({
@@ -81,8 +69,18 @@ const applyTerminalStatus = async (
 				sentRecipients: sql`${campaigns.sentRecipients} + ${sentDelta}`,
 				failedRecipients: sql`${campaigns.failedRecipients} + ${failedDelta}`,
 				startedAt: sql`coalesce(${campaigns.startedAt}, ${next.timestamp})`,
+				status: sql`case
+					when ${campaigns.processedRecipients} + 1 < ${campaigns.uniqueRecipients} then 'processing'
+					when ${campaigns.failedRecipients} + ${failedDelta} = 0 then 'completed'
+					when ${campaigns.sentRecipients} + ${sentDelta} = 0 then 'failed'
+					else 'partial_failed'
+				end`,
+				completedAt: sql`case
+					when ${campaigns.processedRecipients} + 1 = ${campaigns.uniqueRecipients} then ${next.timestamp}
+					else ${campaigns.completedAt}
+				end`,
 			})
-			.where(eq(campaigns.id, row.campaignId)),
+			.where(and(eq(campaigns.id, row.campaignId), recipientIsPending)),
 		db
 			.update(distributions)
 			.set({
@@ -90,57 +88,33 @@ const applyTerminalStatus = async (
 				sentRecipients: sql`${distributions.sentRecipients} + ${sentDelta}`,
 				failedRecipients: sql`${distributions.failedRecipients} + ${failedDelta}`,
 				startedAt: sql`coalesce(${distributions.startedAt}, ${next.timestamp})`,
+				status: sql`case
+					when ${distributions.processedRecipients} + 1 < ${distributions.uniqueRecipients} then 'processing'
+					when ${distributions.failedRecipients} + ${failedDelta} = 0 then 'completed'
+					when ${distributions.sentRecipients} + ${sentDelta} = 0 then 'failed'
+					else 'partial_failed'
+				end`,
+				completedAt: sql`case
+					when ${distributions.processedRecipients} + 1 = ${distributions.uniqueRecipients} then ${next.timestamp}
+					else ${distributions.completedAt}
+				end`,
 			})
-			.where(eq(distributions.id, row.distributionId)),
+			.where(and(eq(distributions.id, row.distributionId), recipientIsPending)),
+		db
+			.update(recipients)
+			.set({
+				status: next.status,
+				providerMessageId: next.providerMessageId,
+				lastError: next.lastError,
+				attemptCount: next.attemptCount,
+				duplicatePossible: next.duplicatePossible,
+				updatedAt: next.timestamp,
+			})
+			.where(and(eq(recipients.id, row.id), eq(recipients.status, 'pending')))
+			.returning({ id: recipients.id }),
 	])
 
-	const [campaign] = await db
-		.select()
-		.from(campaigns)
-		.where(eq(campaigns.id, row.campaignId))
-		.limit(1)
-
-	if (!campaign) {
-		return
-	}
-
-	const campaignStatus = resolveCampaignStatus(campaign)
-	const campaignCompletedAt =
-		campaign.processedRecipients === campaign.uniqueRecipients
-			? next.timestamp
-			: null
-
-	await db
-		.update(campaigns)
-		.set({
-			status: campaignStatus,
-			completedAt: campaignCompletedAt,
-		})
-		.where(eq(campaigns.id, campaign.id))
-
-	const [distribution] = await db
-		.select()
-		.from(distributions)
-		.where(eq(distributions.id, row.distributionId))
-		.limit(1)
-
-	if (!distribution) {
-		return
-	}
-
-	const distributionStatus = resolveCampaignStatus(distribution)
-	const distributionCompletedAt =
-		distribution.processedRecipients === distribution.uniqueRecipients
-			? next.timestamp
-			: null
-
-	await db
-		.update(distributions)
-		.set({
-			status: distributionStatus,
-			completedAt: distributionCompletedAt,
-		})
-		.where(eq(distributions.id, distribution.id))
+	return updated.length > 0
 }
 
 export const finalizeRecipientDelivery = async (input: {
@@ -165,17 +139,8 @@ export const finalizeRecipientDelivery = async (input: {
 		return { indexed: false as const, skippedSend: false as const }
 	}
 
-	const existingOutcome = await getRecipientOutcome(
-		input.bucket,
-		input.environment,
-		input.campaignId,
-		row.id,
-	)
-	const duplicatePossible =
-		input.duplicatePossible === true || Boolean(existingOutcome)
-
 	const timestamp = new Date().toISOString()
-	const outcome: RecipientOutcome = {
+	const proposedOutcome: RecipientOutcome = {
 		environment: input.environment,
 		distributionId: row.distributionId,
 		campaignId: input.campaignId,
@@ -184,21 +149,25 @@ export const finalizeRecipientDelivery = async (input: {
 		status: input.status,
 		providerMessageId: input.providerMessageId,
 		attempts: input.attempts,
-		duplicatePossible,
+		duplicatePossible: input.duplicatePossible === true,
 		error: input.error,
 		timestamp,
 	}
 
-	await saveRecipientOutcome(input.bucket, outcome)
+	const saved = await saveRecipientOutcome(input.bucket, proposedOutcome)
+	const duplicatePossible =
+		saved.outcome.duplicatePossible ||
+		input.duplicatePossible === true ||
+		!saved.created
 
 	try {
 		await applyTerminalStatus(input.database, row, {
-			status: input.status,
-			providerMessageId: input.providerMessageId,
-			lastError: input.error,
-			attemptCount: input.attempts,
+			status: saved.outcome.status,
+			providerMessageId: saved.outcome.providerMessageId,
+			lastError: saved.outcome.error,
+			attemptCount: saved.outcome.attempts,
 			duplicatePossible,
-			timestamp,
+			timestamp: saved.outcome.timestamp,
 		})
 	} catch (error) {
 		logIndexEvent('mail_history.index_update_failed', {
@@ -226,7 +195,7 @@ export const reconcileRecipientOutcome = async (
 		return false
 	}
 
-	await applyTerminalStatus(database, row, {
+	return applyTerminalStatus(database, row, {
 		status: outcome.status,
 		providerMessageId: outcome.providerMessageId,
 		lastError: outcome.error,
@@ -234,7 +203,6 @@ export const reconcileRecipientOutcome = async (
 		duplicatePossible: outcome.duplicatePossible,
 		timestamp: outcome.timestamp,
 	})
-	return true
 }
 
 export const getExistingSentOutcome = async (input: {

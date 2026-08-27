@@ -22,13 +22,13 @@ export const recipientOutcomeKey = (
 	recipientId: string,
 ) => `${environment}/${OUTCOME_ROOT}/${campaignId}/${recipientId}.json`
 
-const putJson = async (bucket: R2Bucket, key: string, data: unknown) => {
-	await bucket.put(key, JSON.stringify(data, null, 2), {
+const putJsonIfAbsent = async (bucket: R2Bucket, key: string, data: unknown) =>
+	bucket.put(key, JSON.stringify(data, null, 2), {
+		onlyIf: { etagDoesNotMatch: '*' },
 		httpMetadata: {
 			contentType: 'application/json',
 		},
 	})
-}
 
 const getJson = async <T>(bucket: R2Bucket, key: string): Promise<T | null> => {
 	const object = await bucket.get(key)
@@ -43,17 +43,7 @@ export const saveRecipientOutcome = async (
 	bucket: R2Bucket,
 	outcome: RecipientOutcome,
 ) => {
-	const existing = await getRecipientOutcome(
-		bucket,
-		outcome.environment,
-		outcome.campaignId,
-		outcome.recipientId,
-	)
-	if (existing) {
-		return existing
-	}
-
-	await putJson(
+	const stored = await putJsonIfAbsent(
 		bucket,
 		recipientOutcomeKey(
 			outcome.environment,
@@ -62,7 +52,23 @@ export const saveRecipientOutcome = async (
 		),
 		outcome,
 	)
-	return outcome
+	if (stored) {
+		return { outcome, created: true as const }
+	}
+
+	const existing = await getRecipientOutcome(
+		bucket,
+		outcome.environment,
+		outcome.campaignId,
+		outcome.recipientId,
+	)
+	if (!existing) {
+		throw new Error(
+			'Recipient outcome conditional write failed without a winner',
+		)
+	}
+
+	return { outcome: existing, created: false as const }
 }
 
 export const getRecipientOutcome = async (
