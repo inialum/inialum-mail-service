@@ -1,6 +1,9 @@
 import type { EnvironmentType } from '@inialum/error-notification-service-hono-middleware'
 
-export type Bindings = Omit<CloudflareBindings, 'ENVIRONMENT'> & {
+export type Bindings = Omit<
+	CloudflareBindings,
+	'BACKFILL_DRY_RUN' | 'ENVIRONMENT'
+> & {
 	ENVIRONMENT: EnvironmentType
 	BACKFILL_DRY_RUN?: string
 	TOKEN_SECRET: string

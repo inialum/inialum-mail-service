@@ -14,6 +14,8 @@ const PAGE_SIZE = 50
 const RETENTION_BATCH = 20
 const BACKFILL_BATCH = 20
 
+type ScheduledCursorName = 'backfill' | 'reconcile'
+
 const logScheduled = (event: string, data: Record<string, unknown>) => {
 	console.log(
 		JSON.stringify({
@@ -25,12 +27,50 @@ const logScheduled = (event: string, data: Record<string, unknown>) => {
 
 const isBackfillDryRun = (value: string | undefined) => value !== 'false'
 
+const cursorKey = (environment: string, name: ScheduledCursorName) =>
+	`${environment}/state/scheduled/${name}-cursor.json`
+
+const getScheduledCursor = async (
+	bucket: R2Bucket,
+	environment: string,
+	name: ScheduledCursorName,
+) => {
+	const object = await bucket.get(cursorKey(environment, name))
+	if (!object) {
+		return undefined
+	}
+
+	const state = await object.json<{ cursor?: string }>()
+	return state.cursor
+}
+
+const saveScheduledCursor = async (
+	bucket: R2Bucket,
+	environment: string,
+	name: ScheduledCursorName,
+	nextCursor?: string,
+) => {
+	const key = cursorKey(environment, name)
+	if (!nextCursor) {
+		await bucket.delete(key)
+		return
+	}
+
+	await bucket.put(key, JSON.stringify({ cursor: nextCursor }), {
+		httpMetadata: { contentType: 'application/json' },
+	})
+}
+
 const listAllKeys = async (bucket: R2Bucket, prefix: string, limit: number) => {
 	const keys: string[] = []
 	let cursor: string | undefined
 
 	do {
-		const page = await bucket.list({ prefix, cursor, limit: 100 })
+		const page = await bucket.list({
+			prefix,
+			cursor,
+			limit: Math.min(1000, limit - keys.length),
+		})
 		for (const object of page.objects) {
 			keys.push(object.key)
 			if (keys.length >= limit) {
@@ -44,11 +84,17 @@ const listAllKeys = async (bucket: R2Bucket, prefix: string, limit: number) => {
 }
 
 export const reconcileOutcomes = async (bindings: Bindings) => {
-	const keys = await listAllKeys(
+	const cursor = await getScheduledCursor(
 		bindings.MAIL_LOGS_BUCKET,
-		`${bindings.ENVIRONMENT}/outcomes/`,
-		PAGE_SIZE,
+		bindings.ENVIRONMENT,
+		'reconcile',
 	)
+	const page = await bindings.MAIL_LOGS_BUCKET.list({
+		prefix: `${bindings.ENVIRONMENT}/outcomes/`,
+		cursor,
+		limit: PAGE_SIZE,
+	})
+	const keys = page.objects.map((object) => object.key)
 	let repaired = 0
 
 	for (const key of keys) {
@@ -76,6 +122,13 @@ export const reconcileOutcomes = async (bindings: Bindings) => {
 		}
 	}
 
+	await saveScheduledCursor(
+		bindings.MAIL_LOGS_BUCKET,
+		bindings.ENVIRONMENT,
+		'reconcile',
+		page.truncated ? page.cursor : undefined,
+	)
+
 	logScheduled('mail_history.reconcile_completed', {
 		environment: bindings.ENVIRONMENT,
 		scanned: keys.length,
@@ -88,9 +141,15 @@ export const reconcileOutcomes = async (bindings: Bindings) => {
 export const backfillLegacyCampaigns = async (bindings: Bindings) => {
 	const dryRun = isBackfillDryRun(bindings.BACKFILL_DRY_RUN)
 	const prefix = `${bindings.ENVIRONMENT}/state/campaigns/`
+	const cursor = await getScheduledCursor(
+		bindings.MAIL_LOGS_BUCKET,
+		bindings.ENVIRONMENT,
+		'backfill',
+	)
 	const listed = await bindings.MAIL_LOGS_BUCKET.list({
 		prefix,
 		delimiter: '/',
+		cursor,
 		limit: BACKFILL_BATCH,
 	})
 	const campaignIds = (listed.delimitedPrefixes ?? [])
@@ -164,6 +223,13 @@ export const backfillLegacyCampaigns = async (bindings: Bindings) => {
 		created += 1
 	}
 
+	await saveScheduledCursor(
+		bindings.MAIL_LOGS_BUCKET,
+		bindings.ENVIRONMENT,
+		'backfill',
+		listed.truncated ? listed.cursor : undefined,
+	)
+
 	logScheduled('mail_backfill.completed', {
 		environment: bindings.ENVIRONMENT,
 		dryRun,
@@ -203,11 +269,10 @@ export const runRetention = async (bindings: Bindings, now = Date.now()) => {
 				`${bindings.ENVIRONMENT}/outcomes/${campaign.id}/`,
 				500,
 			)
-			await Promise.all(
-				[...objects, ...outcomes].map((key) =>
-					bindings.MAIL_LOGS_BUCKET.delete(key),
-				),
-			)
+			const campaignKeys = [...objects, ...outcomes]
+			if (campaignKeys.length > 0) {
+				await bindings.MAIL_LOGS_BUCKET.delete(campaignKeys)
+			}
 		}
 
 		const distributionObjects = await listAllKeys(
@@ -215,9 +280,9 @@ export const runRetention = async (bindings: Bindings, now = Date.now()) => {
 			`${bindings.ENVIRONMENT}/state/distributions/${row.id}/`,
 			100,
 		)
-		await Promise.all(
-			distributionObjects.map((key) => bindings.MAIL_LOGS_BUCKET.delete(key)),
-		)
+		if (distributionObjects.length > 0) {
+			await bindings.MAIL_LOGS_BUCKET.delete(distributionObjects)
+		}
 
 		await db.delete(distributions).where(eq(distributions.id, row.id))
 		deleted += 1
