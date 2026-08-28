@@ -230,6 +230,30 @@ describe('handleMailSendQueue', () => {
 		)
 	})
 
+	test('should record the accumulated recipient attempts after a retry succeeds', async () => {
+		vi.mocked(getCampaignChunkProgress).mockResolvedValueOnce({
+			...baseProgress,
+			currentRecipientAttempts: 2,
+		})
+		vi.mocked(sendEmailWithSES).mockResolvedValueOnce({
+			$metadata: {
+				httpStatusCode: 200,
+			},
+		})
+		const message = createMessage(baseMessageBody)
+		const batch = createBatch([message])
+
+		await handleMailSendQueue(batch, bindings, 0)
+
+		expect(vi.mocked(finalizeRecipientDelivery)).toHaveBeenCalledWith(
+			expect.objectContaining({
+				status: 'sent',
+				email: 'user@example.com',
+				attempts: 3,
+			}),
+		)
+	})
+
 	test('does not resend when an immutable sent outcome already exists', async () => {
 		vi.mocked(getExistingSentOutcome).mockResolvedValueOnce({
 			row: { id: 'rcp_1' },

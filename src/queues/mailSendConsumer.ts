@@ -420,6 +420,10 @@ export const handleMailSendQueue = async (
 				recipientOffset += 1
 			) {
 				const recipient = message.body.recipients[recipientOffset]
+				const currentRecipientAttempts =
+					recipientOffset === progress.nextRecipientOffset
+						? progress.currentRecipientAttempts + 1
+						: 1
 				let didSendRecipient = false
 				let alreadySent = null as Awaited<
 					ReturnType<typeof getExistingSentOutcome>
@@ -470,7 +474,7 @@ export const handleMailSendQueue = async (
 							{
 								status: 'sent',
 								providerMessageId: ses.MessageId,
-								attempts: 1,
+								attempts: currentRecipientAttempts,
 							},
 						)
 						didSendRecipient = true
@@ -496,11 +500,6 @@ export const handleMailSendQueue = async (
 						shouldContinueWithNextQueueMessage = true
 						break
 					}
-
-					const currentRecipientAttempts =
-						recipientOffset === progress.nextRecipientOffset
-							? progress.currentRecipientAttempts + 1
-							: 1
 
 					logQueueEvent('mail_send_queue.delivery_failed', {
 						queue: batch.queue,
