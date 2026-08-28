@@ -217,11 +217,24 @@ sendApiV1.openapi(
 				)
 			}
 		} catch (error) {
-			await finalizeSyncDistribution(bindings, record, data.to, {
-				status: 'failed',
-				error: error instanceof Error ? error.message : String(error),
-				duplicatePossible: error instanceof SESRequestTimeoutError,
-			})
+			try {
+				await finalizeSyncDistribution(bindings, record, data.to, {
+					status: 'failed',
+					error: error instanceof Error ? error.message : String(error),
+					duplicatePossible: error instanceof SESRequestTimeoutError,
+				})
+			} catch (finalizeError) {
+				console.error(
+					JSON.stringify({
+						event: 'mail_history.sync_index_failed',
+						campaignId: record.campaignId,
+						error:
+							finalizeError instanceof Error
+								? finalizeError.message
+								: String(finalizeError),
+					}),
+				)
+			}
 			if (error instanceof SESRequestTimeoutError) {
 				c.var.idempotencyStore?.completeOnNextDelete({
 					status: 500,

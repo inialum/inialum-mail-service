@@ -6,6 +6,7 @@ import {
 	SendApi400ErrorSchemaV1,
 	type SendApiRequestV1,
 } from '../../../libs/api/v1/schema/send'
+import { finalizeSyncDistribution } from '../../../libs/distribution/syncSend'
 import { sendEmailWithSES } from '../../../libs/mail/ses'
 import { apiV1 } from '.'
 
@@ -172,6 +173,50 @@ describe('API v1', () => {
 		expect(retry.headers.get('Idempotency-Replayed')).toBe('true')
 		expect(aborted).toBe(true)
 		expect(sendEmailWithSES).toHaveBeenCalledTimes(1)
+	})
+
+	test('POST /send preserves timeout replay when failure history cannot be finalized', async () => {
+		let aborted = false
+		vi.mocked(sendEmailWithSES).mockImplementationOnce(
+			(_mail, _credentials, _endpoint, options) =>
+				new Promise((_, reject) => {
+					options?.abortSignal?.addEventListener(
+						'abort',
+						() => {
+							aborted = true
+							reject(new Error('aborted'))
+						},
+						{ once: true },
+					)
+				}),
+		)
+		vi.mocked(finalizeSyncDistribution).mockRejectedValueOnce(
+			new Error('history unavailable'),
+		)
+		const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+		const timedOut = await requestSend(
+			apiBodyContent,
+			'invitation:history-timeout:g1',
+		)
+		const retry = await requestSend(
+			apiBodyContent,
+			'invitation:history-timeout:g1',
+		)
+
+		expect(timedOut.status).toBe(500)
+		expect(retry.status).toBe(500)
+		expect(await retry.json()).toEqual({
+			message: 'SES request timed out after 10ms',
+		})
+		expect(retry.headers.get('Idempotency-Replayed')).toBe('true')
+		expect(aborted).toBe(true)
+		expect(sendEmailWithSES).toHaveBeenCalledTimes(1)
+		expect(finalizeSyncDistribution).toHaveBeenCalledTimes(1)
+		expect(errorSpy).toHaveBeenCalledWith(
+			expect.stringContaining('mail_history.sync_index_failed'),
+		)
+		errorSpy.mockRestore()
 	})
 
 	test('POST /send documents the idempotency key length error', async () => {
