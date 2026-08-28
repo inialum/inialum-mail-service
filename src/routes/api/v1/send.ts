@@ -14,6 +14,11 @@ import {
 	type SendApiRequestV1,
 	SendApiResponseSchemaV1,
 } from '../../../libs/api/v1/schema/send'
+import { getExistingSentOutcome } from '../../../libs/distribution/indexRecipient'
+import {
+	createSyncDistribution,
+	finalizeSyncDistribution,
+} from '../../../libs/distribution/syncSend'
 import { createSendIdempotencyMiddleware } from '../../../libs/idempotency/middleware'
 import {
 	createMailIdempotencyStore,
@@ -46,14 +51,14 @@ const route = createRoute({
 	security: [{ Bearer: [] }],
 	request: {
 		headers: z.object({
-			'Idempotency-Key': z
+			'idempotency-key': z
 				.string()
 				.min(1)
 				.max(255)
 				.optional()
 				.openapi({
 					param: {
-						name: 'Idempotency-Key',
+						name: 'idempotency-key',
 						in: 'header',
 					},
 					example: 'invitation:inv_01HZYEXAMPLE:g1',
@@ -152,7 +157,7 @@ const sendOnce = async (
 ) => {
 	const { AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, ENVIRONMENT } = bindings
 
-	await withTimeout(
+	return withTimeout(
 		(abortSignal) =>
 			sendEmailWithSES(
 				{
@@ -179,10 +184,57 @@ sendApiV1.openapi(
 	async (c) => {
 		const data = c.req.valid('json')
 		const bindings = env(c)
+		const record = await createSyncDistribution(
+			bindings,
+			data,
+			c.req.header('Idempotency-Key'),
+		)
+		const alreadySent = await getExistingSentOutcome({
+			database: bindings.DB,
+			bucket: bindings.MAIL_LOGS_BUCKET,
+			environment: bindings.ENVIRONMENT,
+			campaignId: record.campaignId,
+			email: data.to,
+		})
+		if (alreadySent) {
+			return c.json({ status: 'ok' }, 200)
+		}
 
 		try {
-			await sendOnce(data, bindings)
+			const ses = await sendOnce(data, bindings)
+			try {
+				await finalizeSyncDistribution(bindings, record, data.to, {
+					status: 'sent',
+					providerMessageId: ses.MessageId,
+				})
+			} catch (error) {
+				console.error(
+					JSON.stringify({
+						event: 'mail_history.sync_index_failed',
+						campaignId: record.campaignId,
+						error: error instanceof Error ? error.message : String(error),
+					}),
+				)
+			}
 		} catch (error) {
+			try {
+				await finalizeSyncDistribution(bindings, record, data.to, {
+					status: 'failed',
+					error: error instanceof Error ? error.message : String(error),
+					duplicatePossible: error instanceof SESRequestTimeoutError,
+				})
+			} catch (finalizeError) {
+				console.error(
+					JSON.stringify({
+						event: 'mail_history.sync_index_failed',
+						campaignId: record.campaignId,
+						error:
+							finalizeError instanceof Error
+								? finalizeError.message
+								: String(finalizeError),
+					}),
+				)
+			}
 			if (error instanceof SESRequestTimeoutError) {
 				c.var.idempotencyStore?.completeOnNextDelete({
 					status: 500,

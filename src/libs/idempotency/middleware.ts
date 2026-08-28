@@ -9,7 +9,9 @@ import {
 	IDEMPOTENCY_MAX_KEY_LENGTH,
 	IDEMPOTENCY_RETRY_AFTER_SECONDS,
 } from '../../constants/idempotency'
+import { CreateDistributionApiRequestSchemaV1 } from '../api/v1/schema/distributions'
 import { SendApiRequestSchemaV1 } from '../api/v1/schema/send'
+import { hashDistributionPayload } from '../distribution/payloadHash'
 import { hashSendPayload } from './payloadHash'
 
 const hashRawBody = async (raw: string): Promise<string> => {
@@ -66,6 +68,21 @@ const onIdempotencyError = (error: ProblemDetail, c: Context) => {
 	)
 }
 
+const fingerprintDistributionBody = async (c: Context): Promise<string> => {
+	const raw = await c.req.text()
+	try {
+		const parsed = CreateDistributionApiRequestSchemaV1.safeParse(
+			JSON.parse(raw),
+		)
+		if (parsed.success) {
+			return hashDistributionPayload(parsed.data)
+		}
+	} catch {
+		// The route validator returns the public 400 response after the lock is taken.
+	}
+	return hashRawBody(raw)
+}
+
 export const createSendIdempotencyMiddleware = (store: IdempotencyStore) =>
 	idempotency({
 		store,
@@ -75,5 +92,18 @@ export const createSendIdempotencyMiddleware = (store: IdempotencyStore) =>
 		fingerprint: fingerprintSendBody,
 		onError: onIdempotencyError,
 		// Keys are caller-namespaced (e.g. invitation:{id}:g{n}); API is JWT-gated.
+		dangerouslyAllowGlobalKeys: true,
+	})
+
+export const createDistributionIdempotencyMiddleware = (
+	store: IdempotencyStore,
+) =>
+	idempotency({
+		store,
+		required: true,
+		methods: ['POST'],
+		maxKeyLength: IDEMPOTENCY_MAX_KEY_LENGTH,
+		fingerprint: fingerprintDistributionBody,
+		onError: onIdempotencyError,
 		dangerouslyAllowGlobalKeys: true,
 	})

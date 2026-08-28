@@ -8,7 +8,8 @@
 		"region": "aws:ap-northeast-1"
 	},
 	"vars": {
-		"ENVIRONMENT": "production"
+		"ENVIRONMENT": "production",
+		"BACKFILL_DRY_RUN": "true"
 	},
 	"observability": {
 		"enabled": true,
@@ -24,9 +25,13 @@
 		{
 			"binding": "DB",
 			"database_name": "inialum-mail-db",
-			"database_id": "2b18e3f5-d73b-4b5f-aef7-95ab45de15bc"
+			"database_id": "2b18e3f5-d73b-4b5f-aef7-95ab45de15bc",
+			"migrations_dir": "migrations"
 		}
 	],
+	"triggers": {
+		"crons": ["0 17 * * *"]
+	},
 	"queues": {
 		"producers": [
 			{
@@ -54,7 +59,8 @@
 				"region": "aws:ap-northeast-1"
 			},
 			"vars": {
-				"ENVIRONMENT": "staging"
+				"ENVIRONMENT": "staging",
+				"BACKFILL_DRY_RUN": "true"
 			},
 			"r2_buckets": [
 				{
@@ -66,9 +72,13 @@
 				{
 					"binding": "DB",
 					"database_name": "inialum-mail-db-staging",
-					"database_id": "8a29e93e-84cc-4d0f-9401-e599e3008d5d"
+					"database_id": "8a29e93e-84cc-4d0f-9401-e599e3008d5d",
+					"migrations_dir": "migrations"
 				}
 			],
+			"triggers": {
+				"crons": ["0 17 * * *"]
+			},
 			"queues": {
 				"producers": [
 					{

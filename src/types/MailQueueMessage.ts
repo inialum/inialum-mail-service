@@ -5,4 +5,5 @@ export type MailQueueMessage = {
 	campaignId: string
 	chunkIndex: number
 	recipients: string[]
+	distributionId?: string
 }

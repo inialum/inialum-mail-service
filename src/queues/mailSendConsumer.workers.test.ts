@@ -1,3 +1,7 @@
+import {
+	finalizeRecipientDelivery,
+	getExistingSentOutcome,
+} from '../libs/distribution/indexRecipient'
 import { reportQueueError } from '../libs/error/reportQueueError'
 import {
 	getCampaignChunkProgress,
@@ -5,19 +9,15 @@ import {
 	getCampaignStatus,
 } from '../libs/mail/campaignStore'
 import { sendEmailWithSES } from '../libs/mail/ses'
-import type { Bindings } from '../types/Bindings'
+import { testEnv } from '../types/testEnv'
 import { handleMailSendQueue } from './mailSendConsumer'
 import {
 	createExecutionContext,
 	createMessageBatch,
 	getQueueResult,
 } from 'cloudflare:test'
-import { env } from 'cloudflare:workers'
 
-const bindings = {
-	...env,
-	ENVIRONMENT: 'test' as Bindings['ENVIRONMENT'],
-}
+const bindings = testEnv
 
 vi.mock('../libs/error/reportQueueError', () => ({
 	reportQueueError: vi.fn(),
@@ -33,6 +33,11 @@ vi.mock('../libs/mail/ses', () => ({
 	sendEmailWithSES: vi.fn(),
 }))
 
+vi.mock('../libs/distribution/indexRecipient', () => ({
+	finalizeRecipientDelivery: vi.fn(),
+	getExistingSentOutcome: vi.fn(),
+}))
+
 describe('Workers queue integration', () => {
 	beforeEach(() => {
 		vi.mocked(reportQueueError).mockReset()
@@ -41,6 +46,13 @@ describe('Workers queue integration', () => {
 		vi.mocked(getCampaignManifest).mockReset()
 		vi.mocked(getCampaignStatus).mockReset()
 		vi.mocked(sendEmailWithSES).mockReset()
+		vi.mocked(getExistingSentOutcome).mockReset()
+		vi.mocked(getExistingSentOutcome).mockResolvedValue(null)
+		vi.mocked(finalizeRecipientDelivery).mockReset()
+		vi.mocked(finalizeRecipientDelivery).mockResolvedValue({
+			indexed: false,
+			skippedSend: false,
+		})
 	})
 
 	test('acknowledges an invalid message through the real MessageBatch', async () => {

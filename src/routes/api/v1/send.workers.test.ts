@@ -3,19 +3,18 @@ import { sign } from 'hono/jwt'
 import worker from '../../../index'
 import type { SendApiRequestV1 } from '../../../libs/api/v1/schema/send'
 import { sendEmailWithSES } from '../../../libs/mail/ses'
-import type { Bindings } from '../../../types/Bindings'
-import { createExecutionContext, waitOnExecutionContext } from 'cloudflare:test'
-import { env } from 'cloudflare:workers'
+import { testEnv } from '../../../types/testEnv'
+import {
+	applyD1Migrations,
+	createExecutionContext,
+	waitOnExecutionContext,
+} from 'cloudflare:test'
 
 vi.mock('../../../libs/mail/ses', () => ({
 	sendEmailWithSES: vi.fn(),
 }))
 
 const TEST_TOKEN_SECRET = 'test-token-secret'
-const bindings = {
-	...env,
-	ENVIRONMENT: 'test' as Bindings['ENVIRONMENT'],
-}
 
 const body: SendApiRequestV1 = {
 	from: 'noreply@mail.inialum.org',
@@ -47,8 +46,8 @@ const requestSend = async (payload: SendApiRequestV1, key: string) => {
 				'Idempotency-Key': key,
 			},
 			body: JSON.stringify(payload),
-		}),
-		bindings,
+		}) as never,
+		testEnv,
 		context,
 	)
 	await waitOnExecutionContext(context)
@@ -59,12 +58,14 @@ const requestSend = async (payload: SendApiRequestV1, key: string) => {
 }
 
 describe('Workers idempotency integration', () => {
-	beforeEach(() => {
+	beforeEach(async () => {
+		await applyD1Migrations(testEnv.DB, testEnv.TEST_MIGRATIONS)
 		vi.mocked(sendEmailWithSES).mockReset()
 		vi.mocked(sendEmailWithSES).mockResolvedValue({
 			$metadata: { httpStatusCode: 200 },
+			MessageId: 'ses-message-1',
 		})
-		expect(bindings.DB).toBeDefined()
+		expect(testEnv.DB).toBeDefined()
 	})
 
 	test('creates the D1 table and replays the same response without resending', async () => {

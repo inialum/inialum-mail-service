@@ -1,39 +1,24 @@
 import type { ZodError } from 'zod'
 
 import type { SendMultipleApiRequestV1 } from '../../../libs/api/v1/schema/sendMultiple'
-import {
-	getCampaignStatus,
-	saveCampaignChunkProgress,
-	saveCampaignManifest,
-	saveCampaignStatus,
-	updateCampaignStatus,
-} from '../../../libs/mail/campaignStore'
-import {
-	saveCampaignAcceptedLog,
-	saveMailLogToR2,
-} from '../../../libs/mail/r2Logger'
+import { acceptDistribution } from '../../../libs/distribution/accept'
+import { getCampaignStatus } from '../../../libs/mail/campaignStore'
 import { apiV1 } from '.'
 
-const { sendBatchMock } = vi.hoisted(() => {
+vi.mock('../../../libs/distribution/accept', () => {
 	return {
-		sendBatchMock: vi.fn(),
+		acceptDistribution: vi.fn(),
 	}
 })
 
 vi.mock('../../../libs/mail/campaignStore', () => {
 	return {
-		saveCampaignManifest: vi.fn(),
-		saveCampaignStatus: vi.fn(),
-		saveCampaignChunkProgress: vi.fn(),
 		getCampaignStatus: vi.fn(),
-		updateCampaignStatus: vi.fn(),
 	}
 })
 
 vi.mock('../../../libs/mail/r2Logger', () => {
 	return {
-		saveCampaignAcceptedLog: vi.fn(),
-		saveMailLogToR2: vi.fn(),
 		generateMessageId: vi.fn(() => 'test-message-id'),
 	}
 })
@@ -42,15 +27,14 @@ vi.mock('hono/adapter', () => {
 	return {
 		env: vi.fn(() => ({
 			ENVIRONMENT: 'staging',
-			MAIL_SEND_QUEUE: {
-				sendBatch: sendBatchMock,
-			},
+			MAIL_SEND_QUEUE: {},
 			MAIL_LOGS_BUCKET: 'mock-r2-bucket',
+			DB: {},
 		})),
 	}
 })
 
-describe('API v1', () => {
+describe('API v1 send-multiple', () => {
 	const apiBodyContent: SendMultipleApiRequestV1 = {
 		from: 'noreply@mail.inialum.org',
 		to: ['test@example.com', 'TEST@example.com', 'test2@example.com'],
@@ -62,22 +46,18 @@ describe('API v1', () => {
 	}
 
 	beforeEach(() => {
-		sendBatchMock.mockReset()
-		vi.mocked(saveCampaignManifest).mockReset()
-		vi.mocked(saveCampaignStatus).mockReset()
-		vi.mocked(saveCampaignChunkProgress).mockReset()
+		vi.mocked(acceptDistribution).mockReset()
 		vi.mocked(getCampaignStatus).mockReset()
-		vi.mocked(updateCampaignStatus).mockReset()
-		vi.mocked(saveCampaignAcceptedLog).mockReset()
-		vi.mocked(saveMailLogToR2).mockReset()
 	})
 
 	test('POST /send-multiple (should accept and enqueue deduplicated recipients)', async () => {
-		sendBatchMock.mockResolvedValueOnce(undefined)
-		vi.mocked(saveCampaignManifest).mockResolvedValueOnce(undefined)
-		vi.mocked(saveCampaignStatus).mockResolvedValueOnce(undefined)
-		vi.mocked(saveCampaignChunkProgress).mockResolvedValueOnce(undefined)
-		vi.mocked(saveCampaignAcceptedLog).mockResolvedValueOnce(undefined)
+		vi.mocked(acceptDistribution).mockResolvedValueOnce({
+			distributionId: 'dst_test',
+			campaignIds: ['test-message-id'],
+			uniqueRecipients: 2,
+			requestedRecipients: 3,
+			status: 'accepted',
+		})
 
 		const res = await apiV1.request('/send-multiple', {
 			method: 'POST',
@@ -92,112 +72,16 @@ describe('API v1', () => {
 			status: 'accepted',
 			campaignId: 'test-message-id',
 		})
-		expect(vi.mocked(saveCampaignManifest)).toHaveBeenCalledWith(
-			'mock-r2-bucket',
+		expect(acceptDistribution).toHaveBeenCalledWith(
+			expect.anything(),
 			expect.objectContaining({
-				environment: 'staging',
+				kind: 'transactional',
+				source: 'send-multiple',
 				campaignId: 'test-message-id',
-				recipients: ['test@example.com', 'test2@example.com'],
+				enqueue: true,
 				requestedRecipients: 3,
-				uniqueRecipients: 2,
-				chunkCount: 1,
 			}),
 		)
-		expect(vi.mocked(saveCampaignStatus)).toHaveBeenCalledWith(
-			'mock-r2-bucket',
-			expect.objectContaining({
-				status: 'accepted',
-				processedRecipients: 0,
-				sentRecipients: 0,
-				failedRecipients: 0,
-			}),
-		)
-		expect(vi.mocked(saveCampaignChunkProgress)).toHaveBeenCalledWith(
-			'mock-r2-bucket',
-			expect.objectContaining({
-				environment: 'staging',
-				campaignId: 'test-message-id',
-				chunkIndex: 0,
-				nextRecipientOffset: 0,
-				currentRecipientAttempts: 0,
-			}),
-		)
-		expect(sendBatchMock).toHaveBeenCalledTimes(1)
-		expect(sendBatchMock).toHaveBeenCalledWith([
-			{
-				body: {
-					campaignId: 'test-message-id',
-					chunkIndex: 0,
-					recipients: ['test@example.com', 'test2@example.com'],
-				},
-				contentType: 'json',
-			},
-		])
-		expect(vi.mocked(saveCampaignAcceptedLog)).toHaveBeenCalledWith(
-			'mock-r2-bucket',
-			expect.objectContaining({
-				environment: 'staging',
-				campaignId: 'test-message-id',
-				requestedRecipients: 3,
-				uniqueRecipients: 2,
-				queuedRecipients: 2,
-			}),
-		)
-	})
-
-	test('POST /send-multiple (should chunk recipients within Free subrequest budget)', async () => {
-		sendBatchMock.mockResolvedValueOnce(undefined)
-		vi.mocked(saveCampaignManifest).mockResolvedValueOnce(undefined)
-		vi.mocked(saveCampaignStatus).mockResolvedValueOnce(undefined)
-		vi.mocked(saveCampaignChunkProgress).mockResolvedValue(undefined)
-		vi.mocked(saveCampaignAcceptedLog).mockResolvedValueOnce(undefined)
-
-		const recipients = Array.from(
-			{
-				length: 85,
-			},
-			(_, index) => `user${index}@example.com`,
-		)
-
-		const res = await apiV1.request('/send-multiple', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({
-				...apiBodyContent,
-				to: recipients,
-			}),
-		})
-
-		expect(res.status).toBe(202)
-		expect(sendBatchMock).toHaveBeenCalledWith([
-			{
-				body: {
-					campaignId: 'test-message-id',
-					chunkIndex: 0,
-					recipients: recipients.slice(0, 40),
-				},
-				contentType: 'json',
-			},
-			{
-				body: {
-					campaignId: 'test-message-id',
-					chunkIndex: 1,
-					recipients: recipients.slice(40, 80),
-				},
-				contentType: 'json',
-			},
-			{
-				body: {
-					campaignId: 'test-message-id',
-					chunkIndex: 2,
-					recipients: recipients.slice(80, 85),
-				},
-				contentType: 'json',
-			},
-		])
-		expect(vi.mocked(saveCampaignChunkProgress)).toHaveBeenCalledTimes(3)
 	})
 
 	test('POST /send-multiple (should return validation errors)', async () => {
@@ -278,23 +162,9 @@ describe('API v1', () => {
 	})
 
 	test('POST /send-multiple (should return 500 when enqueue fails)', async () => {
-		sendBatchMock.mockRejectedValueOnce(new Error('queue enqueue failed'))
-		vi.mocked(saveCampaignManifest).mockResolvedValueOnce(undefined)
-		vi.mocked(saveCampaignStatus).mockResolvedValueOnce(undefined)
-		vi.mocked(saveCampaignChunkProgress).mockResolvedValueOnce(undefined)
-		vi.mocked(updateCampaignStatus).mockResolvedValueOnce({
-			environment: 'staging',
-			campaignId: 'test-message-id',
-			status: 'failed',
-			requestedRecipients: 3,
-			uniqueRecipients: 2,
-			processedRecipients: 0,
-			sentRecipients: 0,
-			failedRecipients: 0,
-			createdAt: '2026-03-16T00:00:00.000Z',
-			completedAt: '2026-03-16T00:00:01.000Z',
-		})
-		vi.mocked(saveMailLogToR2).mockResolvedValueOnce(undefined)
+		vi.mocked(acceptDistribution).mockRejectedValueOnce(
+			new Error('queue enqueue failed'),
+		)
 
 		const res = await apiV1.request('/send-multiple', {
 			method: 'POST',
@@ -306,20 +176,6 @@ describe('API v1', () => {
 
 		expect(res.status).toBe(500)
 		expect(await res.text()).toBe('Internal Server Error')
-		expect(vi.mocked(updateCampaignStatus)).toHaveBeenCalledWith(
-			'mock-r2-bucket',
-			'staging',
-			'test-message-id',
-			expect.any(Function),
-		)
-		expect(vi.mocked(saveMailLogToR2)).toHaveBeenCalledWith(
-			'mock-r2-bucket',
-			expect.objectContaining({
-				environment: 'staging',
-				status: 'error',
-				messageId: 'test-message-id',
-			}),
-		)
 	})
 
 	test('GET /send-multiple/:campaignId (should return campaign status)', async () => {

@@ -1,5 +1,10 @@
-import { cloudflareTest } from '@cloudflare/vitest-pool-workers'
+import {
+	cloudflareTest,
+	readD1Migrations,
+} from '@cloudflare/vitest-pool-workers'
 import { defineProject } from 'vitest/config'
+
+const migrations = await readD1Migrations('./migrations')
 
 export default defineProject({
 	plugins: [
@@ -16,6 +21,8 @@ export default defineProject({
 					ERROR_NOTIFICATION_TOKEN: 'test-error-notification-token',
 					AWS_ACCESS_KEY_ID: 'test-access-key-id',
 					AWS_SECRET_ACCESS_KEY: 'test-secret-access-key',
+					BACKFILL_DRY_RUN: 'true',
+					TEST_MIGRATIONS: migrations,
 				},
 			},
 		}),
