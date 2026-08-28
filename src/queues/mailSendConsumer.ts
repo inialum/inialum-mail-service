@@ -20,6 +20,11 @@ import {
 import { isInvocationBudgetExhaustedError } from '../libs/mail/invocationBudget'
 import { saveRecipientFailureLog } from '../libs/mail/r2Logger'
 import { sendEmailWithSES } from '../libs/mail/ses'
+import {
+	buildMarketingSendContent,
+	isMailQueueRecipient,
+	parseQueueRecipient,
+} from '../libs/mail/unsubscribe'
 import type { Bindings } from '../types/Bindings'
 import type { MailCampaignChunkProgress } from '../types/MailCampaign'
 import type { MailQueueMessage } from '../types/MailQueueMessage'
@@ -60,7 +65,7 @@ const isMailQueueMessage = (value: unknown): value is MailQueueMessage => {
 		(message.distributionId === undefined ||
 			typeof message.distributionId === 'string') &&
 		Array.isArray(message.recipients) &&
-		message.recipients.every((recipient) => typeof recipient === 'string')
+		message.recipients.every((recipient) => isMailQueueRecipient(recipient))
 	)
 }
 
@@ -419,7 +424,20 @@ export const handleMailSendQueue = async (
 				recipientOffset < message.body.recipients.length;
 				recipientOffset += 1
 			) {
-				const recipient = message.body.recipients[recipientOffset]
+				const parsedRecipient = parseQueueRecipient(
+					message.body.recipients[recipientOffset],
+				)
+				if (!parsedRecipient) {
+					logQueueEvent('mail_send_queue.invalid_recipient', {
+						campaignId: message.body.campaignId,
+						chunkIndex: message.body.chunkIndex,
+						recipientOffset,
+					})
+					message.ack()
+					shouldContinueWithNextQueueMessage = true
+					break
+				}
+				const recipient = parsedRecipient.email
 				const currentRecipientAttempts =
 					recipientOffset === progress.nextRecipientOffset
 						? progress.currentRecipientAttempts + 1
@@ -450,12 +468,39 @@ export const handleMailSendQueue = async (
 						didSendRecipient = true
 						summary.succeeded += 1
 					} else {
+						const marketingContent = buildMarketingSendContent({
+							body: manifest.body,
+							token: parsedRecipient.unsubscribeToken,
+							unsubscribeBaseUrl: bindings.UNSUBSCRIBE_BASE_URL,
+						})
+						if (
+							parsedRecipient.unsubscribeToken &&
+							marketingContent.placeholderMissing
+						) {
+							logQueueEvent('mail_send_queue.unsubscribe_placeholder_missing', {
+								campaignId: message.body.campaignId,
+								distributionId: message.body.distributionId,
+							})
+						}
+						if (
+							parsedRecipient.unsubscribeToken &&
+							!bindings.UNSUBSCRIBE_BASE_URL
+						) {
+							logQueueEvent('mail_send_queue.unsubscribe_base_url_missing', {
+								campaignId: message.body.campaignId,
+								distributionId: message.body.distributionId,
+							})
+						}
+
 						const ses = await sendEmailWithSES(
 							{
 								fromAddress: manifest.from,
 								toAddresses: [recipient],
 								subject: manifest.subject,
-								body: manifest.body,
+								body: marketingContent.body,
+								...(marketingContent.headers
+									? { headers: marketingContent.headers }
+									: {}),
 							},
 							{
 								accessKeyId: bindings.AWS_ACCESS_KEY_ID,

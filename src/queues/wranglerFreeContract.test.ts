@@ -57,4 +57,13 @@ describe('wrangler Free + staging isolation contract', () => {
 		expect(wrangler.vars.BACKFILL_DRY_RUN).toBe('true')
 		expect(wrangler.env.staging.vars.BACKFILL_DRY_RUN).toBe('true')
 	})
+
+	test('points List-Unsubscribe at the matching public origin', () => {
+		expect(wrangler.vars.UNSUBSCRIBE_BASE_URL).toBe(
+			'https://inialum.org/unsubscribe/one-click',
+		)
+		expect(wrangler.env.staging.vars.UNSUBSCRIBE_BASE_URL).toBe(
+			'https://staging.inialum.org/unsubscribe/one-click',
+		)
+	})
 })
