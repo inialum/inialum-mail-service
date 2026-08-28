@@ -230,6 +230,119 @@ describe('handleMailSendQueue', () => {
 		)
 	})
 
+	test('substitutes the unsubscribe placeholder and attaches List-Unsubscribe headers', async () => {
+		vi.mocked(sendEmailWithSES).mockResolvedValueOnce({
+			$metadata: {
+				httpStatusCode: 200,
+			},
+		})
+		vi.mocked(getCampaignManifest).mockResolvedValue({
+			...baseManifest,
+			body: {
+				text: 'Leave: https://inialum.org/unsubscribe?token={{unsubscribeToken}}',
+				html: '<a href="https://inialum.org/unsubscribe?token={{unsubscribeToken}}">解除</a>',
+			},
+		})
+		const message = createMessage({
+			campaignId: 'campaign-1',
+			chunkIndex: 0,
+			distributionId: 'dst_test',
+			recipients: [
+				{
+					email: 'user@example.com',
+					unsubscribeToken: 'opaque.token',
+				},
+			],
+		})
+		const batch = createBatch([message])
+
+		await handleMailSendQueue(
+			batch,
+			{
+				...bindings,
+				UNSUBSCRIBE_BASE_URL: 'https://inialum.org/unsubscribe/one-click',
+			},
+			0,
+		)
+
+		expect(vi.mocked(sendEmailWithSES)).toHaveBeenCalledWith(
+			{
+				fromAddress: 'noreply@mail.inialum.org',
+				toAddresses: ['user@example.com'],
+				subject: 'Subject',
+				body: {
+					text: 'Leave: https://inialum.org/unsubscribe?token=opaque.token',
+					html: '<a href="https://inialum.org/unsubscribe?token=opaque.token">解除</a>',
+				},
+				headers: [
+					{
+						name: 'List-Unsubscribe',
+						value:
+							'<https://inialum.org/unsubscribe/one-click?token=opaque.token>',
+					},
+					{
+						name: 'List-Unsubscribe-Post',
+						value: 'List-Unsubscribe=One-Click',
+					},
+				],
+			},
+			{
+				accessKeyId: 'test-access-key-id',
+				secretAccessKey: 'test-secret-access-key',
+			},
+			undefined,
+			{
+				maxAttempts: 1,
+			},
+		)
+		expect(message.ack).toHaveBeenCalledTimes(1)
+	})
+
+	test('keeps sending marketing mail when the placeholder is missing', async () => {
+		const warn = vi.spyOn(console, 'error').mockImplementation(() => {})
+		vi.mocked(sendEmailWithSES).mockResolvedValueOnce({
+			$metadata: {
+				httpStatusCode: 200,
+			},
+		})
+		const message = createMessage({
+			campaignId: 'campaign-1',
+			chunkIndex: 0,
+			recipients: [
+				{
+					email: 'user@example.com',
+					unsubscribeToken: 'opaque.token',
+				},
+			],
+		})
+		const batch = createBatch([message])
+
+		await handleMailSendQueue(
+			batch,
+			{
+				...bindings,
+				UNSUBSCRIBE_BASE_URL: 'https://inialum.org/unsubscribe/one-click',
+			},
+			0,
+		)
+
+		expect(vi.mocked(sendEmailWithSES)).toHaveBeenCalledWith(
+			expect.objectContaining({
+				body: baseManifest.body,
+				headers: expect.arrayContaining([
+					expect.objectContaining({ name: 'List-Unsubscribe' }),
+				]),
+			}),
+			expect.anything(),
+			undefined,
+			expect.anything(),
+		)
+		expect(warn).toHaveBeenCalledWith(
+			expect.stringContaining('unsubscribe_placeholder_missing'),
+		)
+		warn.mockRestore()
+	})
+
 	test('should record the accumulated recipient attempts after a retry succeeds', async () => {
 		vi.mocked(getCampaignChunkProgress).mockResolvedValueOnce({
 			...baseProgress,

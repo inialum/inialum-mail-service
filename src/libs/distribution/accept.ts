@@ -287,7 +287,10 @@ export const acceptDistribution = async (
 			campaign.chunks.map((chunk, chunkIndex) => ({
 				campaignId: campaign.campaignId,
 				chunkIndex,
-				recipients: chunk.map((recipient) => recipient.email),
+				recipients: chunk.map((recipient) => ({
+					email: recipient.email,
+					unsubscribeToken: recipient.unsubscribeToken,
+				})),
 				distributionId,
 			})),
 		)

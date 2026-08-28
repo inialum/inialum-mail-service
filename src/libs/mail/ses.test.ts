@@ -69,6 +69,43 @@ describe('sendEmailWithSES', () => {
 		})
 	})
 
+	test('attaches List-Unsubscribe headers on Content.Simple', async () => {
+		SESv2Mock.on(SendEmailCommand).resolves({
+			$metadata: {
+				httpStatusCode: 200,
+			},
+		})
+
+		await sendEmailWithSES(
+			{
+				...mailConfig,
+				headers: [
+					{
+						name: 'List-Unsubscribe',
+						value: '<https://inialum.org/unsubscribe/one-click?token=abc>',
+					},
+					{
+						name: 'List-Unsubscribe-Post',
+						value: 'List-Unsubscribe=One-Click',
+					},
+				],
+			},
+			credentials,
+		)
+
+		const command = SESv2Mock.call(0).args[0] as SendEmailCommand
+		expect(command.input.Content?.Simple?.Headers).toEqual([
+			{
+				Name: 'List-Unsubscribe',
+				Value: '<https://inialum.org/unsubscribe/one-click?token=abc>',
+			},
+			{
+				Name: 'List-Unsubscribe-Post',
+				Value: 'List-Unsubscribe=One-Click',
+			},
+		])
+	})
+
 	test('passes an abort signal to the AWS SDK request', async () => {
 		SESv2Mock.on(SendEmailCommand).resolves({
 			$metadata: { httpStatusCode: 200 },

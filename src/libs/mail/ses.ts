@@ -36,7 +36,7 @@ export const buildSesClientConfig = (
 })
 
 export const sendEmailWithSES = async (
-	{ fromAddress, toAddresses, subject, body }: Mail,
+	{ fromAddress, toAddresses, subject, body, headers }: Mail,
 	credentials: SESv2ClientConfig['credentials'],
 	endpoint?: string,
 	options: SendEmailWithSESOptions = {},
@@ -64,6 +64,14 @@ export const sendEmailWithSES = async (
 					Data: subject,
 					Charset: 'UTF-8',
 				},
+				...(headers && headers.length > 0
+					? {
+							Headers: headers.map((header) => ({
+								Name: header.name,
+								Value: header.value,
+							})),
+						}
+					: {}),
 			},
 		},
 		Destination: {

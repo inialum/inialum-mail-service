@@ -1,3 +1,8 @@
+export type MailHeader = {
+	name: string
+	value: string
+}
+
 export type Mail = {
 	fromAddress: string
 	toAddresses: string[]
@@ -6,4 +11,5 @@ export type Mail = {
 		text: string
 		html?: string
 	}
+	headers?: MailHeader[]
 }

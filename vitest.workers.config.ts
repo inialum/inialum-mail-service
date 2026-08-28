@@ -22,6 +22,7 @@ export default defineProject({
 					AWS_ACCESS_KEY_ID: 'test-access-key-id',
 					AWS_SECRET_ACCESS_KEY: 'test-secret-access-key',
 					BACKFILL_DRY_RUN: 'true',
+					UNSUBSCRIBE_BASE_URL: 'http://localhost:8080/unsubscribe/one-click',
 					TEST_MIGRATIONS: migrations,
 				},
 			},
