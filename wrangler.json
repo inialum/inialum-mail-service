@@ -7,6 +7,9 @@
 	"placement": {
 		"region": "aws:ap-northeast-1"
 	},
+	"limits": {
+		"cpu_ms": 30000
+	},
 	"vars": {
 		"ENVIRONMENT": "production",
 		"BACKFILL_DRY_RUN": "true",
@@ -58,6 +61,9 @@
 			"workers_dev": true,
 			"placement": {
 				"region": "aws:ap-northeast-1"
+			},
+			"limits": {
+				"cpu_ms": 30000
 			},
 			"vars": {
 				"ENVIRONMENT": "staging",
