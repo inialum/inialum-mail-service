@@ -23,3 +23,6 @@ export const QUEUE_CONSUMER_MAX_RETRIES = 5
 
 /** SES SDK maxAttempts for the queue consumer only (single-send API keeps SDK default). */
 export const QUEUE_CONSUMER_SES_MAX_ATTEMPTS = 1
+
+/** Delay before the first (and each follow-up) send-progress watchdog check. */
+export const WATCHDOG_DELAY_SECONDS = 300

@@ -6,7 +6,10 @@ import {
 	RECIPIENTS_PER_CAMPAIGN,
 	RECIPIENTS_PER_INSERT,
 } from '../../constants/distribution'
-import { RECIPIENTS_PER_CHUNK } from '../../constants/mail'
+import {
+	RECIPIENTS_PER_CHUNK,
+	WATCHDOG_DELAY_SECONDS,
+} from '../../constants/mail'
 import { createDb, type MailDb } from '../../db'
 import { campaigns, distributions, recipients } from '../../db/schema'
 import type {
@@ -65,6 +68,14 @@ type AcceptBindings = {
 	DB: D1Database
 	MAIL_LOGS_BUCKET: R2Bucket
 	MAIL_SEND_QUEUE: {
+		send: (
+			message: {
+				type: 'watchdog'
+				distributionId: string
+				sentRecipientsSnapshot: number
+			},
+			options: { contentType: 'json'; delaySeconds: number },
+		) => Promise<unknown>
 		sendBatch: (
 			messages: { body: MailQueueMessage; contentType: 'json' }[],
 		) => Promise<unknown>
@@ -308,6 +319,18 @@ export const acceptDistribution = async (
 				})),
 			)
 		}
+
+		await bindings.MAIL_SEND_QUEUE.send(
+			{
+				type: 'watchdog',
+				distributionId,
+				sentRecipientsSnapshot: 0,
+			},
+			{
+				contentType: 'json',
+				delaySeconds: WATCHDOG_DELAY_SECONDS,
+			},
+		)
 
 		await db
 			.update(distributions)

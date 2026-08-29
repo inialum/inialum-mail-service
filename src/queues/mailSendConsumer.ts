@@ -19,6 +19,10 @@ import {
 } from '../libs/mail/campaignStore'
 import { isInvocationBudgetExhaustedError } from '../libs/mail/invocationBudget'
 import { saveRecipientFailureLog } from '../libs/mail/r2Logger'
+import {
+	isMailWatchdogMessage,
+	runMailSendWatchdog,
+} from '../libs/mail/sendWatchdog'
 import { sendEmailWithSES } from '../libs/mail/ses'
 import {
 	buildMarketingSendContent,
@@ -332,6 +336,20 @@ export const handleMailSendQueue = async (
 
 	for (const message of batch.messages) {
 		summary.processed += 1
+
+		if (isMailWatchdogMessage(message.body)) {
+			await runMailSendWatchdog({
+				bindings,
+				queue: batch.queue,
+				message: {
+					id: message.id,
+					body: message.body,
+					ack: () => message.ack(),
+					retry: (options) => message.retry(options),
+				},
+			})
+			continue
+		}
 
 		if (!isMailQueueMessage(message.body)) {
 			summary.invalid += 1

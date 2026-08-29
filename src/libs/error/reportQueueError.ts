@@ -16,6 +16,18 @@ type QueueErrorContext = {
 	willRetry?: boolean
 }
 
+export type MailSendWatchdogAlert = {
+	kind: 'stall' | 'dlq'
+	environment: EnvironmentType
+	queue: string
+	dlqQueue: string
+	distributionId: string
+	status: string
+	sentRecipients: number
+	uniqueRecipients: number
+	dlqBacklog: number
+}
+
 const SERVICE_NAME = 'inialum-mail-service'
 
 const buildDescription = (error: Error, context: QueueErrorContext) => {
@@ -69,6 +81,71 @@ export const reportQueueError = async (
 				campaignId: context.campaignId,
 				recipient: context.recipient,
 				attempts: context.attempts,
+				error:
+					notificationError instanceof Error
+						? notificationError.message
+						: String(notificationError),
+			}),
+		)
+		return false
+	}
+}
+
+const buildWatchdogDescription = (alert: MailSendWatchdogAlert) => {
+	const lines = [
+		alert.kind === 'dlq'
+			? 'Unprocessed messages are in the send dead-letter queue. Recover them manually. Do not attach a permanent consumer to the DLQ.'
+			: 'status is still processing and sent has not increased',
+		`distributionId: ${alert.distributionId}`,
+		`status: ${alert.status}`,
+		`sent: ${alert.sentRecipients} / ${alert.uniqueRecipients}`,
+		`dlqBacklog: ${alert.dlqBacklog}`,
+		`queue: ${alert.queue}`,
+		`dlqQueue: ${alert.dlqQueue}`,
+		`environment: ${alert.environment}`,
+	]
+
+	if (alert.kind === 'stall' && alert.dlqBacklog > 0) {
+		lines[0] =
+			'Send progress is frozen. Unprocessed messages may be in the dead-letter queue. Recover them manually. Do not attach a permanent consumer to the DLQ.'
+	}
+
+	return lines.join('\n')
+}
+
+/**
+ * Best-effort stall / DLQ notification for system operators.
+ * @returns true when the notification request completed without throwing.
+ */
+export const reportMailSendWatchdog = async (
+	token: string,
+	alert: MailSendWatchdogAlert,
+): Promise<boolean> => {
+	const title =
+		alert.kind === 'dlq'
+			? 'Mail send DLQ has unprocessed messages'
+			: 'Mail send stalled'
+	const error = new Error(title)
+
+	try {
+		await notifyError(error, {
+			token,
+			title,
+			description: buildWatchdogDescription(alert),
+			serviceName: SERVICE_NAME,
+			environment: alert.environment,
+			timeout: ERROR_NOTIFICATION_TIMEOUT_MS,
+		})
+		return true
+	} catch (notificationError) {
+		console.error(
+			JSON.stringify({
+				event: 'mail_send_queue.notification_failed',
+				notification_failed: true,
+				queue: alert.queue,
+				environment: alert.environment,
+				reason: alert.kind,
+				distributionId: alert.distributionId,
 				error:
 					notificationError instanceof Error
 						? notificationError.message
