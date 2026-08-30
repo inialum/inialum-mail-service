@@ -12,14 +12,14 @@ describe('reportMailSendWatchdog', () => {
 		vi.mocked(notifyError).mockResolvedValue(undefined)
 	})
 
-	test('uses the stall title when progress is frozen', async () => {
+	test('uses a status-neutral description when progress is frozen', async () => {
 		await reportMailSendWatchdog('token', {
 			kind: 'stall',
 			environment: 'production',
 			queue: 'inialum-mail-send-production',
 			dlqQueue: 'inialum-mail-send-production-dlq',
 			distributionId: 'dst_1',
-			status: 'processing',
+			status: 'accepted',
 			sentRecipients: 211,
 			uniqueRecipients: 248,
 			dlqBacklog: 0,
@@ -31,7 +31,7 @@ describe('reportMailSendWatchdog', () => {
 				title: 'Mail send stalled',
 				serviceName: 'inialum-mail-service',
 				description: expect.stringContaining(
-					'status is still processing and sent has not increased',
+					'Send progress has not increased since the previous watchdog check.',
 				),
 			}),
 		)

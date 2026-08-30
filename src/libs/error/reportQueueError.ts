@@ -95,7 +95,7 @@ const buildWatchdogDescription = (alert: MailSendWatchdogAlert) => {
 	const lines = [
 		alert.kind === 'dlq'
 			? 'Unprocessed messages are in the send dead-letter queue. Recover them manually. Do not attach a permanent consumer to the DLQ.'
-			: 'status is still processing and sent has not increased',
+			: 'Send progress has not increased since the previous watchdog check.',
 		`distributionId: ${alert.distributionId}`,
 		`status: ${alert.status}`,
 		`sent: ${alert.sentRecipients} / ${alert.uniqueRecipients}`,
