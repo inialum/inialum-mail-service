@@ -96,7 +96,7 @@ const readDlqBacklog = async (bindings: Bindings) => {
 				error: error instanceof Error ? error.message : String(error),
 			}),
 		)
-		return 0
+		return null
 	}
 }
 
@@ -126,6 +126,10 @@ export const runMailSendWatchdog = async ({
 		.limit(1)
 
 	const dlqBacklog = await readDlqBacklog(bindings)
+	if (dlqBacklog === null) {
+		message.retry({ delaySeconds: WATCHDOG_DELAY_SECONDS })
+		return
+	}
 	const evaluation = evaluateMailSendWatchdog({
 		distribution: distribution ?? null,
 		dlqBacklog,

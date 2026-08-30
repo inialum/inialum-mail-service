@@ -85,6 +85,35 @@ describe('runMailSendWatchdog', () => {
 		expect(vi.mocked(reportMailSendWatchdog)).not.toHaveBeenCalled()
 	})
 
+	test('retries when DLQ metrics cannot be read', async () => {
+		createDbMock([
+			{
+				status: 'completed',
+				sentRecipients: 10,
+				uniqueRecipients: 10,
+			},
+		])
+		vi.mocked(bindings.MAIL_SEND_DLQ.metrics).mockRejectedValue(
+			new Error('metrics unavailable'),
+		)
+		const message = createMessage({
+			type: 'watchdog',
+			distributionId: 'dst_1',
+			sentRecipientsSnapshot: 10,
+		})
+
+		await runMailSendWatchdog({
+			bindings: bindings as never,
+			queue: 'inialum-mail-send-production',
+			message,
+		})
+
+		expect(message.retry).toHaveBeenCalledWith({ delaySeconds: 300 })
+		expect(message.ack).not.toHaveBeenCalled()
+		expect(bindings.MAIL_SEND_QUEUE.send).not.toHaveBeenCalled()
+		expect(vi.mocked(reportMailSendWatchdog)).not.toHaveBeenCalled()
+	})
+
 	test('notifies stall once and reschedules', async () => {
 		createDbMock([
 			{

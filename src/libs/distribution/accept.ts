@@ -320,17 +320,28 @@ export const acceptDistribution = async (
 			)
 		}
 
-		await bindings.MAIL_SEND_QUEUE.send(
-			{
-				type: 'watchdog',
-				distributionId,
-				sentRecipientsSnapshot: 0,
-			},
-			{
-				contentType: 'json',
-				delaySeconds: WATCHDOG_DELAY_SECONDS,
-			},
-		)
+		try {
+			await bindings.MAIL_SEND_QUEUE.send(
+				{
+					type: 'watchdog',
+					distributionId,
+					sentRecipientsSnapshot: 0,
+				},
+				{
+					contentType: 'json',
+					delaySeconds: WATCHDOG_DELAY_SECONDS,
+				},
+			)
+		} catch (error) {
+			console.error(
+				JSON.stringify({
+					event: 'mail_send_queue.watchdog_enqueue_failed',
+					environment: bindings.ENVIRONMENT,
+					distributionId,
+					error: error instanceof Error ? error.message : String(error),
+				}),
+			)
+		}
 
 		await db
 			.update(distributions)
