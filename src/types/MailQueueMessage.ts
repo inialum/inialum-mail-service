@@ -17,3 +17,12 @@ export type MailQueueMessage = {
 	recipients: MailQueueRecipient[]
 	distributionId?: string
 }
+
+/** Delayed progress / DLQ inspection. Distinct from in-flight chunk payloads. */
+export type MailWatchdogMessage = {
+	type: 'watchdog'
+	distributionId: string
+	sentRecipientsSnapshot: number
+	notifiedStall?: boolean
+	notifiedDlq?: boolean
+}

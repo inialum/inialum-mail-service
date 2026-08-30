@@ -5,6 +5,7 @@ import {
 	QUEUE_CONSUMER_MAX_RETRIES,
 	QUEUE_CONSUMER_SES_MAX_ATTEMPTS,
 	RECIPIENTS_PER_CHUNK,
+	WATCHDOG_DELAY_SECONDS,
 } from './mail'
 
 describe('Workers Free mail delivery constants', () => {
@@ -23,5 +24,9 @@ describe('Workers Free mail delivery constants', () => {
 
 	test('caps queue retries before DLQ delivery', () => {
 		expect(QUEUE_CONSUMER_MAX_RETRIES).toBe(5)
+	})
+
+	test('schedules send-progress watchdog checks every five minutes', () => {
+		expect(WATCHDOG_DELAY_SECONDS).toBe(300)
 	})
 })

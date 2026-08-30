@@ -66,4 +66,33 @@ describe('wrangler Free + staging isolation contract', () => {
 			'https://staging.inialum.org/unsubscribe/one-click',
 		)
 	})
+
+	test('binds the DLQ as a producer without consuming it', () => {
+		expect(wrangler.queues.producers).toEqual(
+			expect.arrayContaining([
+				{
+					binding: 'MAIL_SEND_DLQ',
+					queue: 'inialum-mail-send-production-dlq',
+				},
+			]),
+		)
+		expect(wrangler.env.staging.queues.producers).toEqual(
+			expect.arrayContaining([
+				{
+					binding: 'MAIL_SEND_DLQ',
+					queue: 'inialum-mail-send-staging-dlq',
+				},
+			]),
+		)
+		expect(
+			wrangler.queues.consumers.some(
+				(consumer) => consumer.queue === 'inialum-mail-send-production-dlq',
+			),
+		).toBe(false)
+		expect(
+			wrangler.env.staging.queues.consumers.some(
+				(consumer) => consumer.queue === 'inialum-mail-send-staging-dlq',
+			),
+		).toBe(false)
+	})
 })

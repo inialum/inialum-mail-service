@@ -12,6 +12,7 @@ import {
 	updateCampaignStatus,
 } from '../libs/mail/campaignStore'
 import { saveRecipientFailureLog } from '../libs/mail/r2Logger'
+import { runMailSendWatchdog } from '../libs/mail/sendWatchdog'
 import { sendEmailWithSES } from '../libs/mail/ses'
 import type { Bindings } from '../types/Bindings'
 import type { MailQueueMessage } from '../types/MailQueueMessage'
@@ -68,6 +69,16 @@ vi.mock('../libs/distribution/indexRecipient', () => {
 vi.mock('../libs/error/reportQueueError', () => {
 	return {
 		reportQueueError: vi.fn(),
+		reportMailSendWatchdog: vi.fn(),
+	}
+})
+
+vi.mock('../libs/mail/sendWatchdog', async (importOriginal) => {
+	const actual =
+		await importOriginal<typeof import('../libs/mail/sendWatchdog')>()
+	return {
+		...actual,
+		runMailSendWatchdog: vi.fn(),
 	}
 })
 
@@ -114,6 +125,7 @@ const baseProgress = {
 }
 
 const queueSendMock = vi.fn()
+const dlqMetricsMock = vi.fn()
 
 const bindings = {
 	ENVIRONMENT: 'production',
@@ -123,6 +135,9 @@ const bindings = {
 	MAIL_LOGS_BUCKET: 'mock-r2-bucket',
 	MAIL_SEND_QUEUE: {
 		send: queueSendMock,
+	},
+	MAIL_SEND_DLQ: {
+		metrics: dlqMetricsMock,
 	},
 } as unknown as Bindings
 
@@ -149,6 +164,11 @@ const createBatch = (messages: ReturnType<typeof createMessage>[]) => {
 describe('handleMailSendQueue', () => {
 	beforeEach(() => {
 		queueSendMock.mockReset()
+		dlqMetricsMock.mockReset()
+		dlqMetricsMock.mockResolvedValue({
+			backlogCount: 0,
+			backlogBytes: 0,
+		})
 		vi.mocked(sendEmailWithSES).mockReset()
 		vi.mocked(getCampaignManifest).mockReset()
 		vi.mocked(getCampaignChunkProgress).mockReset()
@@ -158,6 +178,8 @@ describe('handleMailSendQueue', () => {
 		vi.mocked(saveRecipientFailureLog).mockReset()
 		vi.mocked(reportQueueError).mockReset()
 		vi.mocked(reportQueueError).mockResolvedValue(true)
+		vi.mocked(runMailSendWatchdog).mockReset()
+		vi.mocked(runMailSendWatchdog).mockResolvedValue(undefined)
 		vi.mocked(finalizeRecipientDelivery).mockReset()
 		vi.mocked(getExistingSentOutcome).mockReset()
 		vi.mocked(getExistingSentOutcome).mockResolvedValue(null)
@@ -700,5 +722,20 @@ describe('handleMailSendQueue', () => {
 				willRetry: false,
 			}),
 		)
+	})
+
+	test('routes watchdog payloads to the stall inspector', async () => {
+		const message = createMessage({
+			type: 'watchdog',
+			distributionId: 'dst_1',
+			sentRecipientsSnapshot: 0,
+		})
+		const batch = createBatch([message])
+
+		await handleMailSendQueue(batch, bindings, 0)
+
+		expect(vi.mocked(runMailSendWatchdog)).toHaveBeenCalledTimes(1)
+		expect(vi.mocked(sendEmailWithSES)).not.toHaveBeenCalled()
+		expect(vi.mocked(reportQueueError)).not.toHaveBeenCalled()
 	})
 })

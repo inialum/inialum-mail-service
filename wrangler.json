@@ -41,6 +41,10 @@
 			{
 				"binding": "MAIL_SEND_QUEUE",
 				"queue": "inialum-mail-send-production"
+			},
+			{
+				"binding": "MAIL_SEND_DLQ",
+				"queue": "inialum-mail-send-production-dlq"
 			}
 		],
 		"consumers": [
@@ -92,6 +96,10 @@
 					{
 						"binding": "MAIL_SEND_QUEUE",
 						"queue": "inialum-mail-send-staging"
+					},
+					{
+						"binding": "MAIL_SEND_DLQ",
+						"queue": "inialum-mail-send-staging-dlq"
 					}
 				],
 				"consumers": [
