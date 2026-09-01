@@ -25,7 +25,7 @@
 		"wrangler": "wrangler"
 	},
 	"dependencies": {
-		"@aws-sdk/client-sesv2": "^3.684.0",
+		"@aws-sdk/client-sesv2": "^3.1121.0",
 		"@hono/zod-openapi": "^0.16.4",
 		"@inialum/error-notification-service-hono-middleware": "^0.5.0",
 		"@inialum/error-notification-service-javascript-sdk": "^0.5.0",
